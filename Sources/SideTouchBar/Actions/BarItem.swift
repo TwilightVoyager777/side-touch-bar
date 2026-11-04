@@ -87,6 +87,22 @@ struct BarItem: Identifiable {
     }
 }
 
+/// Extra views a preset page can show after its buttons.
+enum PageExtra {
+    /// Status of the agent session in this terminal, with context usage.
+    case agentStatus
+    /// Hold-to-talk voice input and screenshot-to-AI.
+    case voiceAndScreenshot
+    /// One-tap prompts and slash commands from settings.
+    case quickInputs
+    /// The browser's open tabs; tap to switch.
+    case browserTabs
+    /// Drag to scroll the page.
+    case scrollPad
+    /// Favorite sites from settings.
+    case favoriteSites
+}
+
 /// A page becomes active while the menu item at `path` is enabled, e.g. a
 /// debugger page while "Step Over" can be used.
 struct MenuProbe {

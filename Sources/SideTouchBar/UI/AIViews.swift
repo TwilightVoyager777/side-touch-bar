@@ -18,6 +18,13 @@ struct PageExtrasView: View {
             case .quickInputs:
                 BarDivider()
                 QuickInputColumn()
+            case .browserTabs:
+                BrowserTabsView()
+            case .scrollPad:
+                BarDivider()
+                ScrollPadView(state: state)
+            case .favoriteSites:
+                FavoriteSitesColumn()
             }
         }
     }

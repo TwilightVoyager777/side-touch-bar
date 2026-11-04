@@ -1,16 +1,6 @@
 import Carbon.HIToolbox
 import CoreGraphics
 
-/// Extra views a preset page can show after its buttons.
-enum PageExtra {
-    /// Status of the agent session in this terminal, with context usage.
-    case agentStatus
-    /// Hold-to-talk voice input and screenshot-to-AI.
-    case voiceAndScreenshot
-    /// One-tap prompts and slash commands from settings.
-    case quickInputs
-}
-
 /// How to answer a permission prompt in each agent's terminal UI.
 enum AgentAnswer {
     case yes, always, no
@@ -46,12 +36,10 @@ enum AIPresets {
         case .claude:
             [
                 .key("切换权限模式（⇧⇥）", "arrow.triangle.2.circlepath", KeyCombo(kVK_Tab, .maskShift)),
-                .sequence("回退（双击 esc）", "arrow.uturn.backward.circle", [KeyCombo(kVK_Escape), KeyCombo(kVK_Escape)]),
             ]
         case .opencode:
             [
                 .key("切换智能体（⇧⇥）", "arrow.triangle.2.circlepath", KeyCombo(kVK_Tab, .maskShift)),
-                .key("转到后台（⌃B）", "arrow.down.right.and.arrow.up.left", KeyCombo(kVK_ANSI_B, .maskControl)),
             ]
         case .codex, .gemini:
             [
@@ -65,6 +53,7 @@ enum AIPresets {
         case .claude:
             [
                 [
+                    .sequence("回退（双击 esc）", "arrow.uturn.backward.circle", [KeyCombo(kVK_Escape), KeyCombo(kVK_Escape)]),
                     .key("切换模型（⌥P）", "cpu", KeyCombo(kVK_ANSI_P, .maskAlternate)),
                     .key("转到后台（⌃B）", "arrow.down.right.and.arrow.up.left", KeyCombo(kVK_ANSI_B, .maskControl)),
                     .key("任务清单（⌃T）", "list.bullet.rectangle", KeyCombo(kVK_ANSI_T, .maskControl)),
@@ -75,6 +64,9 @@ enum AIPresets {
                     .key("中断（⌃C）", "stop.circle", KeyCombo(kVK_ANSI_C, .maskControl)),
                 ],
             ]
+        case .opencode:
+            [[.key("转到后台（⌃B）", "arrow.down.right.and.arrow.up.left", KeyCombo(kVK_ANSI_B, .maskControl))]]
+                + AppPresets.terminal.pages[0].groups
         default:
             AppPresets.terminal.pages[0].groups
         }

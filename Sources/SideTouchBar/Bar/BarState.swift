@@ -41,6 +41,8 @@ final class BarState: ObservableObject {
     @Published var nowPlayingPage: NowPlayingPage = .main
     @Published var presetPageIndex = 0
     @Published var showSessions = false
+    /// Drag distance already turned into scroll steps by the scroll pad.
+    var scrollPadOffset: CGFloat = 0
     /// A permission request the user chose to handle later.
     @Published var dismissedAttentionKey: AttentionKey?
 
