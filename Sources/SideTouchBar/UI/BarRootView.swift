@@ -38,16 +38,27 @@ struct BarRootView: View {
     }
 }
 
-/// Small pill on the screen edge while the bar is hidden, hinting where to reach.
+/// Small pill on the screen edge while the bar is hidden, hinting where to
+/// reach. It takes the color of coding agent status: orange when one waits for
+/// you, green when one finished, pulsing blue while one works.
 struct EdgeHandle: View {
+    @ObservedObject private var agents = AgentMonitor.shared
+    @ObservedObject private var settings = Settings.shared
     @Environment(\.barMetrics) private var metrics
 
+    private var status: AgentStatus? { settings.aiEnabled ? agents.attention : nil }
+
     var body: some View {
-        Capsule()
-            .fill(Color.white.opacity(0.6))
-            .overlay(Capsule().strokeBorder(Color.black.opacity(0.12), lineWidth: 0.5))
-            .frame(width: 5, height: metrics.handleHeight)
-            .shadow(color: .black.opacity(0.25), radius: 3)
-            .padding(.horizontal, 2)
+        let color = status?.color ?? .white
+        let pulses = status == .running || status == .needsPermission || status == .needsInput
+        TimelineView(.animation(minimumInterval: 1 / 20, paused: !pulses)) { context in
+            let phase = pulses ? (sin(context.date.timeIntervalSinceReferenceDate * 3) + 1) / 2 : 1
+            Capsule()
+                .fill(color.opacity(status == nil ? 0.6 : 0.55 + 0.45 * phase))
+                .overlay(Capsule().strokeBorder(Color.black.opacity(0.12), lineWidth: 0.5))
+                .frame(width: status == nil ? 5 : 6, height: metrics.handleHeight)
+                .shadow(color: (status == nil ? Color.black : color).opacity(0.35), radius: 3)
+                .padding(.horizontal, 2)
+        }
     }
 }

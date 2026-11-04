@@ -23,6 +23,8 @@ final class EdgeController {
     private var collapseTimer: Timer?
     /// The bar was revealed by holding fn and should hide again on release.
     private var expandedByFn = false
+    /// Stay open while an agent waits for a permission decision, up to this time.
+    private var holdOpenUntil: Date?
 
     init(side: BarSide) {
         state = BarState(side: side)
@@ -62,6 +64,14 @@ final class EdgeController {
             forceCollapse()
             panel.orderOut(nil)
         }
+    }
+
+    /// Slides the bar out for an agent that needs a decision, and keeps it out
+    /// until the request is answered or 20 seconds pass.
+    func revealForAttention() {
+        guard isEnabled else { return }
+        holdOpenUntil = Date().addingTimeInterval(20)
+        expand()
     }
 
     /// Like the Touch Bar: while fn is held, show the fn page, revealing the bar if hidden.
@@ -170,6 +180,14 @@ final class EdgeController {
 
     private func tick() {
         let now = Date()
+        if let holdOpenUntil {
+            if now < holdOpenUntil, AgentMonitor.shared.sessionNeedingPermission != nil {
+                lastInside = now
+                lastActivity = now
+                return
+            }
+            self.holdOpenUntil = nil
+        }
         if state.isInteracting || state.isFnHeld {
             lastInside = now
             lastActivity = now

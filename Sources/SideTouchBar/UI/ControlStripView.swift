@@ -7,15 +7,29 @@ struct ControlStripView: View {
     @ObservedObject private var settings = Settings.shared
     @ObservedObject private var frontmost = FrontmostAppMonitor.shared
     @ObservedObject private var nowPlaying = NowPlayingStore.shared
+    @ObservedObject private var agents = AgentMonitor.shared
     @Environment(\.barMetrics) private var metrics
 
-    /// The Touch Bar's Now Playing button: something plays, but the app
-    /// controls aren't already showing its playback controls.
-    private var nowPlayingButtonInfo: NowPlayingInfo? {
-        guard let info = NowPlayingPresentation.info(for: state),
-              !NowPlayingPresentation.isShown(state: state, frontmost: frontmost.app)
-        else { return nil }
-        return info
+    /// One contextual slot, like the Touch Bar's Now Playing button: agents
+    /// that want attention first, then media playing elsewhere, then running agents.
+    private enum ContextButton {
+        case agents(AgentStatus)
+        case nowPlaying(NowPlayingInfo)
+    }
+
+    private var contextButton: ContextButton? {
+        let content = AppControlsContent.resolve(state: state)
+        let agentStatus = settings.aiEnabled ? (state.agentSessionSample?.status ?? agents.attention) : nil
+        if let agentStatus, agentStatus.wantsAttention, !content.isAgentRelated {
+            return .agents(agentStatus)
+        }
+        if case .nowPlaying = content {} else if let info = NowPlayingPresentation.info(for: state) {
+            return .nowPlaying(info)
+        }
+        if agentStatus == .running, !content.isAgentRelated {
+            return .agents(.running)
+        }
+        return nil
     }
 
     var body: some View {
@@ -35,10 +49,17 @@ struct ControlStripView: View {
     private var compact: some View {
         BarButton(icon: .symbol("chevron.up"), help: "展开控制条") { set(.full) }
         BarDivider()
-        if let info = nowPlayingButtonInfo {
+        switch contextButton {
+        case .agents(let status):
+            BarButton(icon: .symbol("sparkles"), help: "AI 会话：\(status.title)", tint: status == .running ? nil : status.color) {
+                withAnimation(BarAnimation.morph) { state.showSessions = true }
+            }
+        case .nowPlaying(let info):
             BarButton(icon: info.app?.icon.map(BarIcon.image) ?? .symbol("play.circle.fill"), help: "正在播放：\(info.title)") {
                 withAnimation(BarAnimation.morph) { state.nowPlayingOverride = true }
             }
+        case nil:
+            EmptyView()
         }
         ForEach(settings.compactItems) { item in
             BarButton(icon: .symbol(item.symbol), help: item.title) {
