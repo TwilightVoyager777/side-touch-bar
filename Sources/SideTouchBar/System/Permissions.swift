@@ -11,14 +11,23 @@ final class Permissions: ObservableObject {
     private var didPromptThisLaunch = false
 
     private init() {
-        timer = Timer.scheduledTimer(withTimeInterval: 2, repeats: true) { [weak self] _ in
+        schedule()
+    }
+
+    /// Checks every 2 seconds while waiting for the grant, then every 10 to notice a revoke.
+    private func schedule() {
+        timer?.invalidate()
+        timer = Timer.scheduledTimer(withTimeInterval: isTrusted ? 10 : 2, repeats: true) { [weak self] _ in
             MainActor.assumeIsolated { self?.refresh() }
         }
     }
 
     func refresh() {
         let trusted = AXIsProcessTrusted()
-        if trusted != isTrusted { isTrusted = trusted }
+        if trusted != isTrusted {
+            isTrusted = trusted
+            schedule()
+        }
     }
 
     /// Returns whether Accessibility is granted; shows the system prompt at most once per launch.

@@ -1,4 +1,5 @@
 import AppKit
+import Combine
 
 struct NowPlayingInfo: Equatable {
     var title: String
@@ -85,6 +86,7 @@ final class NowPlayingStore: ObservableObject {
     private var buffer = Data()
     private var restarts: [Date] = []
     private var volumeTimer: Timer?
+    private var volumeCancellable: AnyCancellable?
 
     private typealias SendCommandFunction = @convention(c) (UInt32, CFDictionary?) -> Bool
     private typealias SetElapsedTimeFunction = @convention(c) (Double) -> Void
@@ -277,12 +279,23 @@ final class NowPlayingStore: ObservableObject {
         artwork = base64.flatMap { Data(base64Encoded: $0) }.flatMap(NSImage.init(data:))
     }
 
+    /// The volume slider is only visible while the bar is out, so only poll then.
     private func startVolumePolling() {
-        guard volumeTimer == nil else { return }
-        refreshVolume()
-        volumeTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
-            MainActor.assumeIsolated { self?.refreshVolume() }
-        }
+        guard volumeCancellable == nil else { return }
+        volumeCancellable = BarActivity.shared.$isExpanded
+            .removeDuplicates()
+            .sink { [weak self] expanded in
+                MainActor.assumeIsolated {
+                    guard let self else { return }
+                    self.volumeTimer?.invalidate()
+                    self.volumeTimer = nil
+                    guard expanded else { return }
+                    self.refreshVolume()
+                    self.volumeTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
+                        MainActor.assumeIsolated { self?.refreshVolume() }
+                    }
+                }
+            }
     }
 
     private func refreshVolume() {

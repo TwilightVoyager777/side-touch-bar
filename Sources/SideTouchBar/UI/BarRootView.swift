@@ -50,7 +50,7 @@ struct EdgeHandle: View {
 
     var body: some View {
         let color = status?.color ?? .white
-        let pulses = status == .running || status == .needsPermission || status == .needsInput
+        let pulses = status == .needsPermission || status == .needsInput
         TimelineView(.animation(minimumInterval: 1 / 20, paused: !pulses)) { context in
             let phase = pulses ? (sin(context.date.timeIntervalSinceReferenceDate * 3) + 1) / 2 : 1
             Capsule()

@@ -117,7 +117,7 @@ final class AgentMonitor: ObservableObject {
         watch(Self.inboxURL) { [weak self] in self?.processInbox() }
         watch(Self.statusURL) { [weak self] in self?.readStatusFiles() }
 
-        timer = Timer.scheduledTimer(withTimeInterval: 3, repeats: true) { [weak self] _ in
+        timer = Timer.scheduledTimer(withTimeInterval: 10, repeats: true) { [weak self] _ in
             MainActor.assumeIsolated {
                 self?.processInbox()
                 self?.pruneEndedSessions()

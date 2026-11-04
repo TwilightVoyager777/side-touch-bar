@@ -82,7 +82,21 @@ final class AIContextMonitor: ObservableObject {
             .receive(on: RunLoop.main)
             .sink { [weak self] _ in self?.refresh() }
             .store(in: &cancellables)
-        // Agents start and quit inside terminals without any app switch.
+        // Agents start and quit inside terminals without any app switch, so
+        // re-check the terminal while the bar is out (and once when it comes out).
+        BarActivity.shared.$isExpanded
+            .removeDuplicates()
+            .sink { [weak self] expanded in
+                MainActor.assumeIsolated { self?.setPolling(expanded) }
+            }
+            .store(in: &cancellables)
+    }
+
+    private func setPolling(_ active: Bool) {
+        timer?.invalidate()
+        timer = nil
+        guard active else { return }
+        refresh()
         timer = Timer.scheduledTimer(withTimeInterval: 3, repeats: true) { [weak self] _ in
             MainActor.assumeIsolated {
                 guard let self, let id = FrontmostAppMonitor.shared.app?.bundleIdentifier,
