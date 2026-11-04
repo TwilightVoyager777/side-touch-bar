@@ -25,6 +25,9 @@ struct PageExtrasView: View {
                 ScrollPadView(state: state)
             case .favoriteSites:
                 FavoriteSitesColumn()
+            case .cursorPad:
+                BarDivider()
+                CursorPadView(state: state)
             }
         }
     }
@@ -154,7 +157,7 @@ struct TextButton: View {
 
     var body: some View {
         Button(action: action) {
-            Text(title)
+            Text(tr(title))
                 .font(.system(size: metrics.captionSize, weight: .medium))
                 .multilineTextAlignment(.center)
                 .lineLimit(2)
@@ -164,7 +167,7 @@ struct TextButton: View {
                 .contentShape(Rectangle())
         }
         .buttonStyle(GlassBarButtonStyle(tint: tint, cornerRadius: metrics.buttonSize * 0.3))
-        .help(help.isEmpty ? title : help)
+        .help(tr(help.isEmpty ? title : help))
     }
 }
 
@@ -199,7 +202,7 @@ struct AgentAttentionPanel: View {
                 AgentSessionActions.answer(.yes, for: session)
             }
             if AIPresets.keys(for: .always, agent: session.agent) != nil {
-                BarButton(icon: .symbol("checkmark.seal"), help: "总是允许（这一项不存在时等于否）") {
+                BarButton(icon: .symbol("checkmark.seal"), help: "总是允许（这一项不存在时等于否）", behavior: .confirm) {
                     AgentSessionActions.answer(.always, for: session)
                 }
             }

@@ -1,4 +1,6 @@
+import Carbon.HIToolbox
 import AppKit
+import Combine
 
 /// Picks the buttons for the frontmost app: the agent page when a coding
 /// agent runs in the terminal, otherwise the app's preset plus the user's
@@ -11,7 +13,42 @@ enum PresetResolver {
         if case .terminal(let agent, _) = context {
             return AIPresets.terminalAgent(agent)
         }
-        return withCustomButtons(AppPresets.preset(for: app?.bundleIdentifier), bundleID: app?.bundleIdentifier)
+        let base = withTextPage(AppPresets.preset(for: app?.bundleIdentifier))
+        return withCustomButtons(base, bundleID: app?.bundleIdentifier)
+    }
+
+    /// Presets where typing is the main activity get a text page that comes
+    /// forward on its own; editors and AI apps get one to open by hand.
+    private static let automaticTextPresets: Set<String> = ["fallback", "notes", "textEditing", "mail", "messages"]
+    private static let manualTextPresets: Set<String> = [
+        "vscode", "cursor", "jetbrains", "xcode", "claudeDesktop", "opencodeDesktop", "chatgpt", "browser",
+    ]
+
+    static func withTextPage(_ base: AppPreset) -> AppPreset {
+        let automatic = automaticTextPresets.contains(base.id)
+        guard automatic || manualTextPresets.contains(base.id) else { return base }
+        return AppPreset(id: base.id, bundleIDs: base.bundleIDs, pages: base.pages + [textPage(automatic: automatic)])
+    }
+
+    static func textPage(automatic: Bool) -> PresetPage {
+        PresetPage(
+            id: "text",
+            title: "文字",
+            symbol: "character.cursor.ibeam",
+            groups: [
+                [
+                    .key("全选", "selection.pin.in.out", KeyCombo(kVK_ANSI_A, .maskCommand)),
+                    BarItem.key("删除一个词", "delete.left", KeyCombo(kVK_Delete, .maskAlternate)).repeating(),
+                ],
+                [
+                    .key("拷贝", "doc.on.doc", KeyCombo(kVK_ANSI_C, .maskCommand)),
+                    .key("粘贴", "doc.on.clipboard", KeyCombo(kVK_ANSI_V, .maskCommand)),
+                    BarItem.key("撤销", "arrow.uturn.backward", KeyCombo(kVK_ANSI_Z, .maskCommand)).repeating(),
+                ],
+            ],
+            extras: [.cursorPad],
+            activatesOnTextFocus: automatic
+        )
     }
 
     static func withCustomButtons(_ base: AppPreset, bundleID: String?) -> AppPreset {
@@ -40,8 +77,22 @@ final class MenuStateMonitor: ObservableObject {
     @Published private(set) var activePageIDs: Set<String> = []
 
     private var timer: Timer?
+    private var cancellable: AnyCancellable?
 
+    /// Polls only while the bar is out.
     private init() {
+        cancellable = BarActivity.shared.$isExpanded
+            .removeDuplicates()
+            .sink { [weak self] expanded in
+                MainActor.assumeIsolated { self?.setActive(expanded) }
+            }
+    }
+
+    private func setActive(_ active: Bool) {
+        timer?.invalidate()
+        timer = nil
+        guard active else { return }
+        poll()
         timer = Timer.scheduledTimer(withTimeInterval: 1.5, repeats: true) { [weak self] _ in
             MainActor.assumeIsolated { self?.poll() }
         }

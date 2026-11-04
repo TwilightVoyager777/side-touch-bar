@@ -52,11 +52,33 @@ enum BarAction {
     case view(ViewCommand)
 }
 
+/// How a button responds to touch.
+enum ItemBehavior {
+    case tap
+    /// Repeats, faster and faster, while held (volume, zoom, skip…).
+    case repeats
+    /// Needs a 0.6 second hold, so a stray touch can't trigger it (lock, delete, always allow…).
+    case confirm
+}
+
 struct BarItem: Identifiable {
     let id = UUID()
     let title: String
     let icon: BarIcon
     let action: BarAction
+    var behavior: ItemBehavior = .tap
+
+    func repeating() -> BarItem {
+        var item = self
+        item.behavior = .repeats
+        return item
+    }
+
+    func confirming() -> BarItem {
+        var item = self
+        item.behavior = .confirm
+        return item
+    }
 
     static func key(_ title: String, _ symbol: String, _ combo: KeyCombo) -> BarItem {
         BarItem(title: title, icon: .symbol(symbol), action: .keys(combo))
@@ -101,6 +123,8 @@ enum PageExtra {
     case scrollPad
     /// Favorite sites from settings.
     case favoriteSites
+    /// Drag to move the text cursor, with select / by-word toggles.
+    case cursorPad
 }
 
 /// A page becomes active while the menu item at `path` is enabled, e.g. a
@@ -116,6 +140,8 @@ struct PresetPage {
     let groups: [[BarItem]]
     var probe: MenuProbe?
     var extras: [PageExtra] = []
+    /// Comes forward while a text field has focus.
+    var activatesOnTextFocus = false
 }
 
 /// Buttons shown in the app controls while a matching app is frontmost.
@@ -201,6 +227,9 @@ enum ControlItem: String, CaseIterable, Identifiable {
         case .sleep: "moon.zzz.fill"
         }
     }
+
+    /// Needs a hold before it runs.
+    var isDangerous: Bool { self == .lockScreen || self == .sleep }
 
     var behavior: Behavior {
         switch self {

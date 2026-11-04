@@ -47,11 +47,11 @@ enum IDEPresets {
                 [
                     .key("转到定义 F12", "arrow.right.to.line", KeyCombo(kVK_F12)),
                     .key("查找引用 ⇧F12", "point.3.connected.trianglepath.dotted", KeyCombo(kVK_F12, shift)),
-                    .key("返回 ⌃-", "chevron.left", KeyCombo(kVK_ANSI_Minus, ctrl)),
+                    .key("返回 ⌃-", "chevron.left", KeyCombo(kVK_ANSI_Minus, ctrl)).repeating(),
                     .key("前进 ⌃⇧-", "chevron.right", KeyCombo(kVK_ANSI_Minus, ctrlShift)),
                 ],
                 [
-                    .key("下一个问题 F8", "exclamationmark.bubble", KeyCombo(kVK_F8)),
+                    .key("下一个问题 F8", "exclamationmark.bubble", KeyCombo(kVK_F8)).repeating(),
                 ],
             ]),
             PresetPage(id: "edit", title: "编辑", symbol: "textformat.alt", groups: [
@@ -75,7 +75,7 @@ enum IDEPresets {
                 groups: [
                     [
                         .key("继续 F5", "play.fill", KeyCombo(kVK_F5)),
-                        .key("单步跳过 F10", "arrow.turn.down.right", KeyCombo(kVK_F10)),
+                        .key("单步跳过 F10", "arrow.turn.down.right", KeyCombo(kVK_F10)).repeating(),
                         .key("单步进入 F11", "arrow.down.to.line", KeyCombo(kVK_F11)),
                         .key("单步跳出 ⇧F11", "arrow.up.to.line", KeyCombo(kVK_F11, shift)),
                     ],
@@ -145,7 +145,7 @@ enum IDEPresets {
                     .key("前进 ⌘]", "chevron.right", KeyCombo(kVK_ANSI_RightBracket, cmd)),
                 ],
                 [
-                    .key("下一个错误 F2", "exclamationmark.bubble", KeyCombo(kVK_F2)),
+                    .key("下一个错误 F2", "exclamationmark.bubble", KeyCombo(kVK_F2)).repeating(),
                 ],
             ]),
             PresetPage(id: "edit", title: "编辑", symbol: "textformat.alt", groups: [
@@ -164,12 +164,12 @@ enum IDEPresets {
             PresetPage(id: "git", title: "Git", symbol: "arrow.triangle.branch", groups: [
                 [
                     .key("提交 ⌘K", "checkmark.circle", KeyCombo(kVK_ANSI_K, cmd)),
-                    .key("推送 ⇧⌘K", "arrow.up.circle", KeyCombo(kVK_ANSI_K, cmdShift)),
+                    .key("推送 ⇧⌘K", "arrow.up.circle", KeyCombo(kVK_ANSI_K, cmdShift)).confirming(),
                     .key("更新项目 ⌘T", "arrow.down.circle", KeyCombo(kVK_ANSI_T, cmd)),
                 ],
                 [
                     .key("查看改动 ⌘D", "plus.forwardslash.minus", KeyCombo(kVK_ANSI_D, cmd)),
-                    .key("回滚 ⌥⌘Z", "arrow.uturn.backward", KeyCombo(kVK_ANSI_Z, cmdOpt)),
+                    .key("回滚 ⌥⌘Z", "arrow.uturn.backward", KeyCombo(kVK_ANSI_Z, cmdOpt)).confirming(),
                     .key("Git 窗口 ⌘9", "arrow.triangle.branch", KeyCombo(kVK_ANSI_9, cmd)),
                 ],
             ]),
@@ -180,7 +180,7 @@ enum IDEPresets {
                 groups: [
                     [
                         .key("继续 ⌥⌘R", "play.fill", KeyCombo(kVK_ANSI_R, cmdOpt)),
-                        .key("步过 F8", "arrow.turn.down.right", KeyCombo(kVK_F8)),
+                        .key("步过 F8", "arrow.turn.down.right", KeyCombo(kVK_F8)).repeating(),
                         .key("步入 F7", "arrow.down.to.line", KeyCombo(kVK_F7)),
                         .key("步出 ⇧F8", "arrow.up.to.line", KeyCombo(kVK_F8, shift)),
                     ],
@@ -206,7 +206,7 @@ enum IDEPresets {
                 .key("测试 ⌘U", "checkmark.diamond", KeyCombo(kVK_ANSI_U, cmd)),
             ],
             [
-                .key("清理 ⇧⌘K", "trash", KeyCombo(kVK_ANSI_K, cmdShift)),
+                .key("清理 ⇧⌘K", "trash", KeyCombo(kVK_ANSI_K, cmdShift)).confirming(),
                 .key("切换断点 ⌘\\", "smallcircle.filled.circle", KeyCombo(kVK_ANSI_Backslash, cmd)),
                 sendToAI,
             ],
@@ -243,7 +243,7 @@ enum IDEPresets {
             groups: [
                 [
                     .key("继续 ⌃⌘Y", "play.fill", KeyCombo(kVK_ANSI_Y, cmdCtrl)),
-                    .key("单步跳过 F6", "arrow.turn.down.right", KeyCombo(kVK_F6)),
+                    .key("单步跳过 F6", "arrow.turn.down.right", KeyCombo(kVK_F6)).repeating(),
                     .key("单步进入 F7", "arrow.down.to.line", KeyCombo(kVK_F7)),
                     .key("单步跳出 F8", "arrow.up.to.line", KeyCombo(kVK_F8)),
                 ],

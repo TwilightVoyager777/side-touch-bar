@@ -43,6 +43,15 @@ final class BarState: ObservableObject {
     @Published var showSessions = false
     /// Drag distance already turned into scroll steps by the scroll pad.
     var scrollPadOffset: CGFloat = 0
+    /// Drag distance already turned into cursor moves by the cursor pad.
+    var cursorPadOffset: CGSize = .zero
+    @Published var textSelecting = false
+    @Published var textByWord = false
+
+    /// Press-and-slide on a level button in the control strip.
+    @Published var slidingLevel: LevelKind?
+    @Published var slideValue: Double = 0
+    var slideStart: Float = 0
     /// A permission request the user chose to handle later.
     @Published var dismissedAttentionKey: AttentionKey?
 

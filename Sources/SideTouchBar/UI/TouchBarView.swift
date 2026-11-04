@@ -122,6 +122,7 @@ struct PresetView: View {
     @ObservedObject var state: BarState
     let preset: AppPreset
     @ObservedObject private var menuState = MenuStateMonitor.shared
+    @ObservedObject private var textFocus = TextFocusMonitor.shared
     @Environment(\.barMetrics) private var metrics
 
     private var pageIndex: Int {
@@ -146,6 +147,13 @@ struct PresetView: View {
             if let started = preset.pages.firstIndex(where: { new.contains($0.id) && !old.contains($0.id) }) {
                 withAnimation(BarAnimation.morph) { state.presetPageIndex = started }
             } else if let id = preset.pages[pageIndex].probe.map({ _ in preset.pages[pageIndex].id }), !new.contains(id) {
+                withAnimation(BarAnimation.morph) { state.presetPageIndex = 0 }
+            }
+        }
+        .onChange(of: textFocus.isEditingText) { _, editing in
+            if editing, let text = preset.pages.firstIndex(where: \.activatesOnTextFocus) {
+                withAnimation(BarAnimation.morph) { state.presetPageIndex = text }
+            } else if !editing, preset.pages[pageIndex].activatesOnTextFocus {
                 withAnimation(BarAnimation.morph) { state.presetPageIndex = 0 }
             }
         }

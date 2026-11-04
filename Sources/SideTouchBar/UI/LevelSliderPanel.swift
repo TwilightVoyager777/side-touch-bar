@@ -4,6 +4,26 @@ enum LevelKind: Equatable {
     case brightness, volume, keyboard
 }
 
+/// Reads and sets the levels the control strip can slide.
+@MainActor
+enum LevelControl {
+    static func get(_ kind: LevelKind) -> Float? {
+        switch kind {
+        case .volume: Volume.get()
+        case .brightness: Brightness.get()
+        case .keyboard: KeyboardBrightness.get()
+        }
+    }
+
+    static func set(_ kind: LevelKind, _ value: Float) {
+        switch kind {
+        case .volume: Volume.set(value)
+        case .brightness: Brightness.set(value)
+        case .keyboard: KeyboardBrightness.set(value)
+        }
+    }
+}
+
 /// Like tapping brightness/volume on the Touch Bar: the strip turns into a slider.
 struct LevelSliderPanel: View {
     let kind: LevelKind
@@ -78,21 +98,13 @@ struct LevelSliderPanel: View {
     }
 
     private func load() {
-        let current: Float? = switch kind {
-        case .volume: Volume.get()
-        case .brightness: Brightness.get()
-        case .keyboard: KeyboardBrightness.get()
-        }
+        let current = LevelControl.get(kind)
         state.isLevelAvailable = current != nil
         state.levelValue = Double(current ?? 0.5)
     }
 
     private func apply(_ newValue: Double) {
-        switch kind {
-        case .volume: Volume.set(Float(newValue))
-        case .brightness: Brightness.set(Float(newValue))
-        case .keyboard: KeyboardBrightness.set(Float(newValue))
-        }
+        LevelControl.set(kind, Float(newValue))
     }
 }
 

@@ -122,7 +122,7 @@ enum BarSizer {
         let sampleCustom = PresetResolver.customPage(
             (0..<PresetResolver.maxCustomButtons).map { CustomButton(title: "按钮\($0)", symbol: "star", kind: .keys(KeyCombo(0))) }
         )
-        let presets = [AppPresets.fallback] + AppPresets.all + AIPresets.desktopApps
+        let presets = ([AppPresets.fallback] + AppPresets.all + AIPresets.desktopApps).map(PresetResolver.withTextPage)
             + AgentKind.allCases.map(AIPresets.terminalAgent)
             + [AppPreset(id: "customSample", bundleIDs: [], pages: AppPresets.fallback.pages + [sampleCustom])]
 

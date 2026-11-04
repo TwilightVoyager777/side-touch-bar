@@ -22,16 +22,16 @@ enum AppPresets {
     /// The Touch Bar's default expanded Control Strip, top to bottom.
     static let controlStripFull: [[BarItem]] = [
         [
-            .system("亮度 +", "sun.max.fill", .brightnessUp),
-            .system("亮度 -", "sun.min.fill", .brightnessDown),
+            .system("亮度 +", "sun.max.fill", .brightnessUp).repeating(),
+            .system("亮度 -", "sun.min.fill", .brightnessDown).repeating(),
         ],
         [
             .system("调度中心", "rectangle.3.group", .missionControl),
             .system("启动台", "square.grid.3x3.fill", .apps),
         ],
         [
-            .system("键盘背光 +", "light.max", .keyboardBrightnessUp),
-            .system("键盘背光 -", "light.min", .keyboardBrightnessDown),
+            .system("键盘背光 +", "light.max", .keyboardBrightnessUp).repeating(),
+            .system("键盘背光 -", "light.min", .keyboardBrightnessDown).repeating(),
         ],
         [
             .system("上一首", "backward.fill", .previous),
@@ -39,8 +39,8 @@ enum AppPresets {
             .system("下一首", "forward.fill", .next),
         ],
         [
-            .system("音量 +", "speaker.wave.3.fill", .volumeUp),
-            .system("音量 -", "speaker.wave.1.fill", .volumeDown),
+            .system("音量 +", "speaker.wave.3.fill", .volumeUp).repeating(),
+            .system("音量 -", "speaker.wave.1.fill", .volumeDown).repeating(),
             .system("静音", "speaker.slash.fill", .mute),
         ],
         [
@@ -70,8 +70,8 @@ enum AppPresets {
                 .key("查找", "magnifyingglass", KeyCombo(kVK_ANSI_F, cmd)),
             ],
             [
-                .key("撤销", "arrow.uturn.backward", KeyCombo(kVK_ANSI_Z, cmd)),
-                .key("重做", "arrow.uturn.forward", KeyCombo(kVK_ANSI_Z, cmdShift)),
+                .key("撤销", "arrow.uturn.backward", KeyCombo(kVK_ANSI_Z, cmd)).repeating(),
+                .key("重做", "arrow.uturn.forward", KeyCombo(kVK_ANSI_Z, cmdShift)).repeating(),
             ],
             [
                 .key("拷贝", "doc.on.doc", KeyCombo(kVK_ANSI_C, cmd)),
@@ -101,7 +101,7 @@ enum AppPresets {
                 [
                     .key("地址栏", "magnifyingglass", KeyCombo(kVK_ANSI_L, cmd)),
                     .key("新标签页", "plus", KeyCombo(kVK_ANSI_T, cmd)),
-                    .key("关闭标签页", "xmark", KeyCombo(kVK_ANSI_W, cmd)),
+                    .key("关闭标签页", "xmark", KeyCombo(kVK_ANSI_W, cmd)).confirming(),
                 ],
                 [
                     .key("重新打开关闭的标签页 ⇧⌘T", "arrow.uturn.backward", KeyCombo(kVK_ANSI_T, cmdShift)),
@@ -115,8 +115,8 @@ enum AppPresets {
                     .key("到底部", "arrow.down.to.line", KeyCombo(kVK_DownArrow, cmd)),
                 ],
                 [
-                    .key("放大", "plus.magnifyingglass", KeyCombo(kVK_ANSI_Equal, cmd)),
-                    .key("缩小", "minus.magnifyingglass", KeyCombo(kVK_ANSI_Minus, cmd)),
+                    .key("放大", "plus.magnifyingglass", KeyCombo(kVK_ANSI_Equal, cmd)).repeating(),
+                    .key("缩小", "minus.magnifyingglass", KeyCombo(kVK_ANSI_Minus, cmd)).repeating(),
                     .key("实际大小", "1.magnifyingglass", KeyCombo(kVK_ANSI_0, cmd)),
                     .key("页内查找", "text.magnifyingglass", KeyCombo(kVK_ANSI_F, cmd)),
                 ],
@@ -152,7 +152,7 @@ enum AppPresets {
             [
                 .key("快速查看", "eye", KeyCombo(kVK_Space)),
                 .key("显示简介", "info.circle", KeyCombo(kVK_ANSI_I, cmd)),
-                .key("移到废纸篓", "trash", KeyCombo(kVK_Delete, cmd)),
+                .key("移到废纸篓", "trash", KeyCombo(kVK_Delete, cmd)).confirming(),
             ],
         ]
     )
@@ -168,14 +168,14 @@ enum AppPresets {
         groups: [
             [
                 .key("新标签页", "plus.square.on.square", KeyCombo(kVK_ANSI_T, cmd)),
-                .key("关闭标签页", "xmark.square", KeyCombo(kVK_ANSI_W, cmd)),
+                .key("关闭标签页", "xmark.square", KeyCombo(kVK_ANSI_W, cmd)).confirming(),
             ],
             [
                 .key("上一个标签页", "arrow.up.square", KeyCombo(kVK_ANSI_LeftBracket, cmdShift)),
                 .key("下一个标签页", "arrow.down.square", KeyCombo(kVK_ANSI_RightBracket, cmdShift)),
             ],
             [
-                .key("上一条命令", "arrow.up", KeyCombo(kVK_UpArrow)),
+                .key("上一条命令", "arrow.up", KeyCombo(kVK_UpArrow)).repeating(),
                 .key("中断 (⌃C)", "stop.circle", KeyCombo(kVK_ANSI_C, ctrl)),
                 .key("清屏", "clear", KeyCombo(kVK_ANSI_K, cmd)),
             ],
@@ -200,8 +200,8 @@ enum AppPresets {
                 .system("下一首", "forward.fill", .next),
             ],
             [
-                .system("音量 +", "speaker.wave.3.fill", .volumeUp),
-                .system("音量 -", "speaker.wave.1.fill", .volumeDown),
+                .system("音量 +", "speaker.wave.3.fill", .volumeUp).repeating(),
+                .system("音量 -", "speaker.wave.1.fill", .volumeDown).repeating(),
             ],
         ]
     )
@@ -220,7 +220,7 @@ enum AppPresets {
             ],
             [
                 .key("归档", "archivebox.fill", KeyCombo(kVK_ANSI_A, cmdCtrl)),
-                .key("删除", "trash", KeyCombo(kVK_Delete, cmd)),
+                .key("删除", "trash", KeyCombo(kVK_Delete, cmd)).confirming(),
                 .key("旗标", "flag.fill", KeyCombo(kVK_ANSI_L, cmdShift)),
             ],
         ]
@@ -231,9 +231,9 @@ enum AppPresets {
         bundleIDs: ["com.apple.iCal"],
         groups: [
             [
-                .key("上一页", "chevron.up", KeyCombo(kVK_LeftArrow, cmd)),
+                .key("上一页", "chevron.up", KeyCombo(kVK_LeftArrow, cmd)).repeating(),
                 .key("今天", "calendar.badge.clock", KeyCombo(kVK_ANSI_T, cmd)),
-                .key("下一页", "chevron.down", KeyCombo(kVK_RightArrow, cmd)),
+                .key("下一页", "chevron.down", KeyCombo(kVK_RightArrow, cmd)).repeating(),
             ],
             [
                 .text("日", "日", KeyCombo(kVK_ANSI_1, cmd)),
@@ -252,8 +252,8 @@ enum AppPresets {
         bundleIDs: ["com.apple.Preview"],
         groups: [
             [
-                .key("放大", "plus.magnifyingglass", KeyCombo(kVK_ANSI_Equal, cmd)),
-                .key("缩小", "minus.magnifyingglass", KeyCombo(kVK_ANSI_Minus, cmd)),
+                .key("放大", "plus.magnifyingglass", KeyCombo(kVK_ANSI_Equal, cmd)).repeating(),
+                .key("缩小", "minus.magnifyingglass", KeyCombo(kVK_ANSI_Minus, cmd)).repeating(),
                 .key("实际大小", "1.magnifyingglass", KeyCombo(kVK_ANSI_0, cmd)),
             ],
             [
@@ -317,8 +317,8 @@ enum AppPresets {
                 .key("下划线", "underline", KeyCombo(kVK_ANSI_U, cmd)),
             ],
             [
-                .key("撤销", "arrow.uturn.backward", KeyCombo(kVK_ANSI_Z, cmd)),
-                .key("重做", "arrow.uturn.forward", KeyCombo(kVK_ANSI_Z, cmdShift)),
+                .key("撤销", "arrow.uturn.backward", KeyCombo(kVK_ANSI_Z, cmd)).repeating(),
+                .key("重做", "arrow.uturn.forward", KeyCombo(kVK_ANSI_Z, cmdShift)).repeating(),
             ],
             [
                 .key("查找", "magnifyingglass", KeyCombo(kVK_ANSI_F, cmd)),
@@ -336,8 +336,8 @@ enum AppPresets {
                 .key("新幻灯片", "rectangle.badge.plus", KeyCombo(kVK_ANSI_N, cmdShift)),
             ],
             [
-                .key("上一张", "chevron.up", KeyCombo(kVK_UpArrow)),
-                .key("下一张", "chevron.down", KeyCombo(kVK_DownArrow)),
+                .key("上一张", "chevron.up", KeyCombo(kVK_UpArrow)).repeating(),
+                .key("下一张", "chevron.down", KeyCombo(kVK_DownArrow)).repeating(),
             ],
             [
                 .key("粗体", "bold", KeyCombo(kVK_ANSI_B, cmd)),
@@ -370,8 +370,8 @@ enum AppPresets {
         bundleIDs: ["com.apple.Photos"],
         groups: [
             [
-                .key("上一张", "chevron.up", KeyCombo(kVK_LeftArrow)),
-                .key("下一张", "chevron.down", KeyCombo(kVK_RightArrow)),
+                .key("上一张", "chevron.up", KeyCombo(kVK_LeftArrow)).repeating(),
+                .key("下一张", "chevron.down", KeyCombo(kVK_RightArrow)).repeating(),
             ],
             [
                 .key("收藏", "heart.fill", KeyCombo(kVK_ANSI_Period)),
@@ -379,7 +379,7 @@ enum AppPresets {
                 .key("编辑", "wand.and.stars", KeyCombo(kVK_Return)),
             ],
             [
-                .key("删除", "trash", KeyCombo(kVK_Delete, cmd)),
+                .key("删除", "trash", KeyCombo(kVK_Delete, cmd)).confirming(),
             ],
         ]
     )

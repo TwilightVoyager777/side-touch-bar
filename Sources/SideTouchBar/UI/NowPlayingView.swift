@@ -105,7 +105,7 @@ struct NowPlayingPanel: View {
         if info.isMusic {
             BarButton(icon: .symbol("backward.fill"), help: "上一首") { store.previousTrack() }
         } else {
-            BarButton(icon: .symbol("gobackward.\(skipSeconds)"), help: "后退 \(skipSeconds) 秒") { store.skip(by: -Double(skipSeconds)) }
+            BarButton(icon: .symbol("gobackward.\(skipSeconds)"), help: tr("后退 %d 秒", skipSeconds), behavior: .repeats) { store.skip(by: -Double(skipSeconds)) }
         }
         BarButton(icon: .symbol(info.isPlaying ? "pause.fill" : "play.fill"), help: info.isPlaying ? "暂停" : "播放") {
             store.togglePlayPause()
@@ -113,7 +113,7 @@ struct NowPlayingPanel: View {
         if info.isMusic {
             BarButton(icon: .symbol("forward.fill"), help: "下一首") { store.nextTrack() }
         } else {
-            BarButton(icon: .symbol("goforward.\(skipSeconds)"), help: "前进 \(skipSeconds) 秒") { store.skip(by: Double(skipSeconds)) }
+            BarButton(icon: .symbol("goforward.\(skipSeconds)"), help: tr("前进 %d 秒", skipSeconds), behavior: .repeats) { store.skip(by: Double(skipSeconds)) }
         }
     }
 

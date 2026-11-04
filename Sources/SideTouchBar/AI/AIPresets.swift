@@ -25,7 +25,7 @@ enum AIPresets {
     static func answerItems(for agent: AgentKind) -> [BarItem] {
         var items = [BarItem.key("是", "checkmark", keys(for: .yes, agent: agent)!)]
         if let always = keys(for: .always, agent: agent) {
-            items.append(.key("总是允许（这一项不存在时等于否）", "checkmark.seal", always))
+            items.append(BarItem.key("总是允许（这一项不存在时等于否）", "checkmark.seal", always).confirming())
         }
         items.append(.key("否 / 中断", "xmark", keys(for: .no, agent: agent)!))
         return items

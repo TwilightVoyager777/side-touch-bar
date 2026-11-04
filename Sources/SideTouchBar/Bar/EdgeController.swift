@@ -109,12 +109,19 @@ final class EdgeController {
 
     func handlePointer(at point: NSPoint, type: NSEvent.EventType) {
         guard isEnabled, screen != nil else { return }
+        if Settings.shared.touchEdgeSwipe { trackSwipe(at: point, type: type) }
 
         if state.isExpanded {
             if hoverRect.contains(point) {
                 lastInside = Date()
                 lastActivity = Date()
             }
+            return
+        }
+
+        // A touch on the handle pill opens the bar right away.
+        if type == .leftMouseDown, isOnHandle(point) {
+            expand()
             return
         }
 
@@ -138,6 +145,46 @@ final class EdgeController {
         }
     }
 
+    // MARK: - Swipes
+
+    private var swipeOrigin: (point: NSPoint, time: Date)?
+
+    /// Swipe in from the screen edge to reveal the bar; swipe out across the
+    /// bar toward the edge to hide it. Touch screens deliver these as mouse drags.
+    private func trackSwipe(at point: NSPoint, type: NSEvent.EventType) {
+        guard let screen else { return }
+        switch type {
+        case .leftMouseDown:
+            let edgeDistance = side == .right ? screen.frame.maxX - point.x : point.x - screen.frame.minX
+            let band = barRect.insetBy(dx: 0, dy: -40)
+            let startsAtEdge = !state.isExpanded && edgeDistance <= 24 && point.y >= band.minY && point.y <= band.maxY
+            let startsOnBar = state.isExpanded && barRect.contains(point)
+            swipeOrigin = startsAtEdge || startsOnBar ? (point, Date()) : nil
+        case .leftMouseDragged:
+            guard let origin = swipeOrigin, Date().timeIntervalSince(origin.time) < 0.8 else { return }
+            let inward = side == .right ? origin.point.x - point.x : point.x - origin.point.x
+            let vertical = abs(point.y - origin.point.y)
+            if !state.isExpanded, inward >= 24, inward > vertical {
+                swipeOrigin = nil
+                expand()
+            } else if state.isExpanded, !state.isInteracting, -inward >= 50, -inward > vertical * 2 {
+                swipeOrigin = nil
+                forceCollapse()
+            }
+        case .leftMouseUp:
+            swipeOrigin = nil
+        default:
+            break
+        }
+    }
+
+    private func isOnHandle(_ point: NSPoint) -> Bool {
+        guard let screen else { return false }
+        let edgeDistance = side == .right ? screen.frame.maxX - point.x : point.x - screen.frame.minX
+        let center = barRect.midY
+        return edgeDistance <= 14 && abs(point.y - center) <= state.metrics.handleHeight / 2 + 12
+    }
+
     // MARK: - Expand / collapse
 
     private func expand() {
@@ -147,6 +194,7 @@ final class EdgeController {
         lastActivity = Date()
         panel.ignoresMouseEvents = false
         state.isExpanded = true
+        BarActivity.shared.isExpanded = true
         startCollapseTimer()
     }
 
@@ -162,6 +210,8 @@ final class EdgeController {
         state.isInteracting = false
         expandedByFn = false
         panel.ignoresMouseEvents = true
+        BarActivity.shared.isExpanded = false
+        Repeater.shared.stop()
 
         // Return to the compact strip once the bar has slid away.
         resetTask = Task { @MainActor [weak self] in
@@ -188,7 +238,7 @@ final class EdgeController {
             }
             self.holdOpenUntil = nil
         }
-        if state.isInteracting || state.isFnHeld {
+        if state.isInteracting || state.isFnHeld || Repeater.shared.isActive {
             lastInside = now
             lastActivity = now
             return
