@@ -4,14 +4,48 @@ import Carbon.HIToolbox
 @MainActor
 enum ActionRunner {
     static func run(_ action: BarAction) {
+        let app = FrontmostAppMonitor.shared.app
         switch action {
         case .keys(let combo):
             sendKeys(combo)
+        case .keySequence(let combos):
+            guard Permissions.shared.requestIfNeeded() else { return }
+            Task { @MainActor in
+                for (index, combo) in combos.enumerated() {
+                    if index > 0 { try? await Task.sleep(for: .milliseconds(70)) }
+                    KeySender.send(combo)
+                }
+            }
         case .system(let command):
             run(command)
-        case .emojiPicker:
-            // Handled by the view, which owns the bar state.
+        case .menu(let command):
+            guard Permissions.shared.requestIfNeeded() else { return }
+            if command.paths.contains(where: { MenuInvoker.press($0, in: app) }) { return }
+            if let fallback = command.fallback { KeySender.send(fallback) }
+        case .menuSearch(let keywords, let fallback):
+            guard Permissions.shared.requestIfNeeded() else { return }
+            if !MenuInvoker.pressFirst(matching: keywords, in: app), let fallback {
+                KeySender.send(fallback)
+            }
+        case .ai(let command):
+            AIActions.run(command)
+        case .openURL(let string):
+            openURL(string, preferring: app)
+        case .text(let text, let submit):
+            TextInserter.insert(text, submit: submit)
+        case .view:
+            // Handled by the views, which own the bar state.
             break
+        }
+    }
+
+    /// Opens a link in the frontmost app when it is a browser, otherwise in the default browser.
+    private static func openURL(_ string: String, preferring app: NSRunningApplication?) {
+        guard let url = URL(string: string) else { return }
+        if let app, let bundleURL = app.bundleURL, AppPresets.browser.bundleIDs.contains(app.bundleIdentifier ?? "") {
+            NSWorkspace.shared.open([url], withApplicationAt: bundleURL, configuration: NSWorkspace.OpenConfiguration())
+        } else {
+            NSWorkspace.shared.open(url)
         }
     }
 

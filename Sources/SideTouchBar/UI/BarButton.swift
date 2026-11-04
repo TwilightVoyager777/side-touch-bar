@@ -105,8 +105,8 @@ struct ItemGroupsView: View {
     }
 
     private func perform(_ action: BarAction) {
-        if case .emojiPicker = action {
-            withAnimation(BarAnimation.morph) { state?.showEmojiPicker = true }
+        if case .view(let command) = action {
+            withAnimation(BarAnimation.morph) { state?.handle(command) }
         } else {
             ActionRunner.run(action)
         }

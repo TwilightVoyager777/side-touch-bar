@@ -17,11 +17,39 @@ enum SystemCommand {
     case nightShift, darkMode, inputSource, emoji, shortcuts, sleep, screenSaver
 }
 
-enum BarAction {
-    case keys(KeyCombo)
-    case system(SystemCommand)
+/// Actions handled by the bar's views rather than sent to an app.
+enum ViewCommand: Equatable {
     /// Turns the app controls into the Touch Bar emoji scrubber.
     case emojiPicker
+    case nextPresetPage
+    case mediaMore
+    case audioOutputs
+}
+
+enum AICommand {
+    case sendSelection
+    case sendPage
+    case screenshot
+}
+
+/// Presses the first menu item found among `paths` in the frontmost app,
+/// falling back to a shortcut. See `MenuInvoker` for the path format.
+struct MenuCommand {
+    let paths: [[String]]
+    var fallback: KeyCombo?
+}
+
+enum BarAction {
+    case keys(KeyCombo)
+    case keySequence([KeyCombo])
+    case system(SystemCommand)
+    case menu(MenuCommand)
+    /// Presses the first menu item whose title contains a keyword.
+    case menuSearch([String], fallback: KeyCombo?)
+    case ai(AICommand)
+    case openURL(String)
+    case text(String, submit: Bool)
+    case view(ViewCommand)
 }
 
 struct BarItem: Identifiable {
@@ -41,13 +69,57 @@ struct BarItem: Identifiable {
     static func system(_ title: String, _ symbol: String, _ command: SystemCommand) -> BarItem {
         BarItem(title: title, icon: .symbol(symbol), action: .system(command))
     }
+
+    static func menu(_ title: String, _ symbol: String, _ paths: [String]..., fallback: KeyCombo? = nil) -> BarItem {
+        BarItem(title: title, icon: .symbol(symbol), action: .menu(MenuCommand(paths: paths, fallback: fallback)))
+    }
+
+    static func sequence(_ title: String, _ symbol: String, _ combos: [KeyCombo]) -> BarItem {
+        BarItem(title: title, icon: .symbol(symbol), action: .keySequence(combos))
+    }
+
+    static func ai(_ title: String, _ symbol: String, _ command: AICommand) -> BarItem {
+        BarItem(title: title, icon: .symbol(symbol), action: .ai(command))
+    }
+
+    static func view(_ title: String, _ symbol: String, _ command: ViewCommand) -> BarItem {
+        BarItem(title: title, icon: .symbol(symbol), action: .view(command))
+    }
 }
 
-/// A set of button groups shown in the app region while a matching app is frontmost.
+/// A page becomes active while the menu item at `path` is enabled, e.g. a
+/// debugger page while "Step Over" can be used.
+struct MenuProbe {
+    let path: [String]
+}
+
+struct PresetPage {
+    let id: String
+    let title: String
+    let symbol: String
+    let groups: [[BarItem]]
+    var probe: MenuProbe?
+    var extras: [PageExtra] = []
+}
+
+/// Buttons shown in the app controls while a matching app is frontmost.
+/// Apps with many buttons split them into pages, switched from the top of the app controls.
 struct AppPreset {
     let id: String
     let bundleIDs: Set<String>
-    let groups: [[BarItem]]
+    let pages: [PresetPage]
+
+    init(id: String, bundleIDs: Set<String>, groups: [[BarItem]]) {
+        self.init(id: id, bundleIDs: bundleIDs, pages: [PresetPage(id: "main", title: "常用", symbol: "square.grid.2x2", groups: groups)])
+    }
+
+    init(id: String, bundleIDs: Set<String>, pages: [PresetPage]) {
+        self.id = id
+        self.bundleIDs = bundleIDs
+        self.pages = pages
+    }
+
+    var hasProbes: Bool { pages.contains { $0.probe != nil } }
 }
 
 /// Buttons that can be placed in the collapsed control strip, like the

@@ -1,13 +1,41 @@
 import Carbon.HIToolbox
 import CoreGraphics
 
-struct KeyCombo {
+struct KeyCombo: Codable, Hashable {
     let key: CGKeyCode
     let flags: CGEventFlags
 
     init(_ key: Int, _ flags: CGEventFlags = []) {
         self.key = CGKeyCode(key)
         self.flags = flags
+    }
+
+    init(key: CGKeyCode, flags: CGEventFlags) {
+        self.key = key
+        self.flags = flags.intersection([.maskCommand, .maskShift, .maskAlternate, .maskControl])
+    }
+
+    private enum CodingKeys: String, CodingKey { case key, flags }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        key = try container.decode(CGKeyCode.self, forKey: .key)
+        flags = CGEventFlags(rawValue: try container.decode(UInt64.self, forKey: .flags))
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(key, forKey: .key)
+        try container.encode(flags.rawValue, forKey: .flags)
+    }
+
+    static func == (lhs: KeyCombo, rhs: KeyCombo) -> Bool {
+        lhs.key == rhs.key && lhs.flags.rawValue == rhs.flags.rawValue
+    }
+
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(key)
+        hasher.combine(flags.rawValue)
     }
 }
 
