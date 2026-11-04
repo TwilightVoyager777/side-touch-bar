@@ -1,0 +1,224 @@
+import AppKit
+import SwiftUI
+
+/// Owns one side bar: positions its panel on the screen edge and decides
+/// when it slides in (pointer/touch reaches the edge) and out (pointer leaves or idles).
+@MainActor
+final class EdgeController {
+    let state: BarState
+    var side: BarSide { state.side }
+
+    private let panel = EdgePanel()
+    private var screen: NSScreen?
+    private var contentSize = CGSize(width: BarMetrics.width, height: 320)
+    private(set) var isEnabled = true
+    private var autoHide = true
+
+    private var lastInside = Date()
+    private var lastActivity = Date()
+    private var dwellTask: Task<Void, Never>?
+    private var shrinkTask: Task<Void, Never>?
+    private var resetTask: Task<Void, Never>?
+    private var collapseTimer: Timer?
+
+    init(side: BarSide) {
+        state = BarState(side: side, content: side == .left ? .controlStrip : .appRegion)
+        panel.setRootView(BarRootView(state: state) { [weak self] size in
+            MainActor.assumeIsolated { self?.contentSizeChanged(size) }
+        })
+        panel.ignoresMouseEvents = true
+    }
+
+    // MARK: - Configuration
+
+    func setScreen(_ screen: NSScreen) {
+        self.screen = screen
+        state.maxBarHeight = screen.visibleFrame.height - BarMetrics.shadowMargin * 2
+        updateFrame(immediately: true)
+    }
+
+    func setEnabled(_ enabled: Bool) {
+        guard enabled != isEnabled || enabled != panel.isVisible else { return }
+        isEnabled = enabled
+        if enabled {
+            panel.orderFrontRegardless()
+        } else {
+            forceCollapse()
+            panel.orderOut(nil)
+        }
+    }
+
+    func setContent(_ content: BarContent) {
+        guard state.content != content else { return }
+        state.resetTransientState()
+        state.content = content
+    }
+
+    func setAutoHide(_ enabled: Bool) {
+        autoHide = enabled
+        if enabled {
+            if state.isExpanded { startCollapseTimer() }
+        } else {
+            collapseTimer?.invalidate()
+            expand()
+        }
+    }
+
+    func setAppearance(_ appearance: NSAppearance?) {
+        panel.appearance = appearance
+    }
+
+    // MARK: - Pointer handling
+
+    func handlePointer(at point: NSPoint, type: NSEvent.EventType) {
+        guard isEnabled, screen != nil else { return }
+
+        if state.isExpanded {
+            if hoverRect.contains(point) {
+                lastInside = Date()
+                lastActivity = Date()
+            }
+            return
+        }
+
+        guard isInTriggerZone(point) else {
+            dwellTask?.cancel()
+            dwellTask = nil
+            return
+        }
+
+        if type == .leftMouseDown {
+            expand()
+            return
+        }
+
+        // Short dwell so that flicking the cursor past the edge doesn't pop the bar open.
+        guard dwellTask == nil else { return }
+        dwellTask = Task { @MainActor [weak self] in
+            guard (try? await Task.sleep(for: .milliseconds(140))) != nil, let self else { return }
+            self.dwellTask = nil
+            if self.isInTriggerZone(NSEvent.mouseLocation) { self.expand() }
+        }
+    }
+
+    // MARK: - Expand / collapse
+
+    private func expand() {
+        guard isEnabled, !state.isExpanded else { return }
+        resetTask?.cancel()
+        lastInside = Date()
+        lastActivity = Date()
+        panel.ignoresMouseEvents = false
+        state.isExpanded = true
+        startCollapseTimer()
+    }
+
+    private func collapse() {
+        guard autoHide else { return }
+        forceCollapse()
+    }
+
+    private func forceCollapse() {
+        collapseTimer?.invalidate()
+        guard state.isExpanded else { return }
+        state.isExpanded = false
+        state.isInteracting = false
+        panel.ignoresMouseEvents = true
+
+        // Return to the compact strip once the bar has slid away.
+        resetTask = Task { @MainActor [weak self] in
+            guard (try? await Task.sleep(for: .milliseconds(450))) != nil, let self, !self.state.isExpanded else { return }
+            self.state.resetTransientState()
+        }
+    }
+
+    private func startCollapseTimer() {
+        collapseTimer?.invalidate()
+        guard autoHide else { return }
+        collapseTimer = Timer.scheduledTimer(withTimeInterval: 0.2, repeats: true) { [weak self] _ in
+            MainActor.assumeIsolated { self?.tick() }
+        }
+    }
+
+    private func tick() {
+        let now = Date()
+        if state.isInteracting {
+            lastInside = now
+            lastActivity = now
+            return
+        }
+        if hoverRect.contains(NSEvent.mouseLocation) {
+            lastInside = now
+        }
+        // A touch leaves the cursor parked on the bar, so also hide after a period with no input.
+        let idleDelay = Settings.shared.idleDelay
+        let isIdle = idleDelay > 0 && now.timeIntervalSince(lastActivity) > idleDelay
+        if now.timeIntervalSince(lastInside) > BarMetrics.leaveDelay || isIdle {
+            collapse()
+        }
+    }
+
+    // MARK: - Geometry
+
+    /// The visible bar in global screen coordinates.
+    private var barRect: NSRect {
+        guard let screen else { return .zero }
+        let frame = screen.frame
+        let visible = screen.visibleFrame
+        let width = BarMetrics.width
+        let height = contentSize.height
+        let x = side == .left
+            ? frame.minX + BarMetrics.edgeInset
+            : frame.maxX - BarMetrics.edgeInset - width
+        return NSRect(x: x, y: visible.midY - height / 2, width: width, height: height)
+    }
+
+    private var hoverRect: NSRect {
+        let rect = barRect.insetBy(dx: -BarMetrics.hoverSlack, dy: -BarMetrics.hoverSlack)
+        // Extend to the screen edge so the gap between edge and bar counts as inside.
+        guard let screen else { return rect }
+        return side == .left
+            ? rect.union(NSRect(x: screen.frame.minX, y: rect.minY, width: 1, height: rect.height))
+            : rect.union(NSRect(x: screen.frame.maxX - 1, y: rect.minY, width: 1, height: rect.height))
+    }
+
+    private func isInTriggerZone(_ point: NSPoint) -> Bool {
+        guard let screen else { return false }
+        let frame = screen.frame
+        let bar = barRect
+        let atEdge = side == .left
+            ? point.x <= frame.minX + BarMetrics.triggerWidth && point.x >= frame.minX
+            : point.x >= frame.maxX - BarMetrics.triggerWidth && point.x <= frame.maxX
+        return atEdge && point.y >= bar.minY - 20 && point.y <= bar.maxY + 20
+    }
+
+    private func contentSizeChanged(_ size: CGSize) {
+        guard size.height > 0, size != contentSize else { return }
+        contentSize = size
+        updateFrame(immediately: false)
+    }
+
+    /// Grows the window right away, but shrinks it only after the SwiftUI
+    /// animation has finished so content is never clipped mid-animation.
+    private func updateFrame(immediately: Bool) {
+        guard let screen else { return }
+        let frame = screen.frame
+        let visible = screen.visibleFrame
+        let margin = BarMetrics.shadowMargin
+        let width = BarMetrics.edgeInset + BarMetrics.width + margin
+        let height = min(contentSize.height + margin * 2, visible.height).rounded(.up)
+        let x = side == .left ? frame.minX : frame.maxX - width
+        let target = NSRect(x: x, y: (visible.midY - height / 2).rounded(), width: width, height: height)
+
+        shrinkTask?.cancel()
+        let current = panel.frame
+        if immediately || target.height >= current.height || current.minX != target.minX {
+            panel.setFrame(target, display: true)
+        } else {
+            shrinkTask = Task { @MainActor [weak self] in
+                guard (try? await Task.sleep(for: .milliseconds(450))) != nil else { return }
+                self?.panel.setFrame(target, display: true)
+            }
+        }
+    }
+}
