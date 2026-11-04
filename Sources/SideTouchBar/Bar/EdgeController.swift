@@ -9,8 +9,8 @@ final class EdgeController {
     var side: BarSide { state.side }
 
     private let panel = EdgePanel()
-    private var screen: NSScreen?
-    private var contentSize = CGSize(width: BarMetrics.width, height: 320)
+    private var contentSize = CGSize(width: BarMetrics.standard.width, height: 320)
+    private(set) var screen: NSScreen?
     private(set) var isEnabled = true
     private var autoHide = true
 
@@ -33,8 +33,20 @@ final class EdgeController {
 
     func setScreen(_ screen: NSScreen) {
         self.screen = screen
-        state.maxBarHeight = screen.visibleFrame.height - BarMetrics.shadowMargin * 2
+        refreshMetrics()
         updateFrame(immediately: true)
+    }
+
+    var isExpanded: Bool { state.isExpanded }
+
+    /// Re-picks bar sizes for the current screen, content and settings.
+    func refreshMetrics() {
+        guard let screen else { return }
+        let metrics = BarSizer.metrics(for: screen, content: state.content).metrics
+        if metrics != state.metrics {
+            state.metrics = metrics
+            updateFrame(immediately: true)
+        }
     }
 
     func setEnabled(_ enabled: Bool) {
@@ -164,13 +176,14 @@ final class EdgeController {
     private var barRect: NSRect {
         guard let screen else { return .zero }
         let frame = screen.frame
-        let visible = screen.visibleFrame
-        let width = BarMetrics.width
+        let band = screen.barBand
+        let width = state.metrics.width
         let height = contentSize.height
         let x = side == .left
             ? frame.minX + BarMetrics.edgeInset
             : frame.maxX - BarMetrics.edgeInset - width
-        return NSRect(x: x, y: visible.midY - height / 2, width: width, height: height)
+        let midY = (band.lowerBound + band.upperBound) / 2
+        return NSRect(x: x, y: midY - height / 2, width: width, height: height)
     }
 
     private var hoverRect: NSRect {
@@ -203,12 +216,13 @@ final class EdgeController {
     private func updateFrame(immediately: Bool) {
         guard let screen else { return }
         let frame = screen.frame
-        let visible = screen.visibleFrame
+        let band = screen.barBand
         let margin = BarMetrics.shadowMargin
-        let width = BarMetrics.edgeInset + BarMetrics.width + margin
-        let height = min(contentSize.height + margin * 2, visible.height).rounded(.up)
+        let width = BarMetrics.edgeInset + state.metrics.width + margin
+        let height = min(contentSize.height + margin * 2, band.upperBound - band.lowerBound).rounded(.up)
         let x = side == .left ? frame.minX : frame.maxX - width
-        let target = NSRect(x: x, y: (visible.midY - height / 2).rounded(), width: width, height: height)
+        let midY = (band.lowerBound + band.upperBound) / 2
+        let target = NSRect(x: x, y: (midY - height / 2).rounded(), width: width, height: height)
 
         shrinkTask?.cancel()
         let current = panel.frame
