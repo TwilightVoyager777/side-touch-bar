@@ -1,4 +1,5 @@
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct SettingsView: View {
     @ObservedObject private var settings = Settings.shared
@@ -19,20 +20,39 @@ struct SettingsView: View {
     var body: some View {
         Form {
             Section {
-                LayoutPicker(selection: $settings.layout)
-                    .padding(.vertical, 4)
-
-                if settings.layout == .both {
-                    Picker("系统控制条", selection: $settings.controlStripSide) {
-                        Text("左侧").tag(BarSide.left)
-                        Text("右侧").tag(BarSide.right)
-                    }
-                    .pickerStyle(.segmented)
+                Picker("触控栏显示", selection: $settings.barPage) {
+                    ForEach(BarPage.allCases) { Text($0.title).tag($0) }
+                }
+                Picker("按住 fn 键时", selection: $settings.fnHoldPage) {
+                    ForEach(BarPage.fnHoldChoices) { Text($0.title).tag($0) }
                 }
             } header: {
-                Text("布局")
+                Text("触控栏")
             } footer: {
-                Text(layoutFooter)
+                Text("和原来的 Touch Bar 一样：最上面是 esc，中间是当前应用的按钮，下面是控制条。按住键盘上的 fn（🌐）键会临时切换显示。")
+                    .foregroundStyle(.secondary)
+            }
+
+            Section {
+                ForEach(settings.functionKeyApps, id: \.self) { bundleID in
+                    HStack {
+                        AppLabel(bundleID: bundleID)
+                        Spacer()
+                        Button {
+                            settings.functionKeyApps.removeAll { $0 == bundleID }
+                        } label: {
+                            Image(systemName: "minus.circle.fill")
+                                .foregroundStyle(.secondary)
+                        }
+                        .buttonStyle(.plain)
+                        .help("移除")
+                    }
+                }
+                Button("添加应用…", action: addFunctionKeyApp)
+            } header: {
+                Text("总是显示 F1、F2 等键的应用")
+            } footer: {
+                Text("在这些应用里，触控栏默认显示 F1–F12；按住 fn 键时显示应用控件。")
                     .foregroundStyle(.secondary)
             }
 
@@ -97,14 +117,14 @@ struct SettingsView: View {
                 }
             } header: {
                 HStack {
-                    Text("收起时的控制条")
+                    Text("自定义控制条")
                     Spacer()
                     Button("恢复默认") { settings.compactItems = ControlItem.defaultCompact }
                         .buttonStyle(.link)
                         .font(.caption)
                 }
             } footer: {
-                Text("最多 \(Settings.maxCompactItems) 个。点控制条顶部的 ⌃ 可以展开完整控制条。")
+                Text("最多 \(Settings.maxCompactItems) 个，原版 Touch Bar 默认是亮度、音量、静音、Siri。点控制条顶部的 ⌃ 可以展开完整控制条。")
                     .foregroundStyle(.secondary)
             }
 
@@ -118,7 +138,7 @@ struct SettingsView: View {
                     }
                 } label: {
                     Text("辅助功能")
-                    Text("用于发送快捷键、媒体键和 esc")
+                    Text("用于发送快捷键、媒体键、esc，以及识别 fn 键")
                 }
             }
         }
@@ -127,13 +147,15 @@ struct SettingsView: View {
         .frame(minHeight: 560)
     }
 
-    private var layoutFooter: String {
-        switch settings.layout {
-        case .both:
-            "一侧显示系统控制条，另一侧显示 esc、fn 和当前应用的按钮。"
-        case .left, .right:
-            "应用按钮和系统控制条合并在同一条里，和原来的 Touch Bar 一样。"
-        }
+    private func addFunctionKeyApp() {
+        let panel = NSOpenPanel()
+        panel.allowedContentTypes = [.application]
+        panel.directoryURL = URL(fileURLWithPath: "/Applications")
+        panel.allowsMultipleSelection = true
+        panel.prompt = "添加"
+        guard panel.runModal() == .OK else { return }
+        let ids = panel.urls.compactMap { Bundle(url: $0)?.bundleIdentifier }
+        settings.functionKeyApps += ids.filter { !settings.functionKeyApps.contains($0) }
     }
 
     private func binding(for item: ControlItem) -> Binding<Bool> {
@@ -150,64 +172,22 @@ struct SettingsView: View {
     }
 }
 
-/// Three little screens showing where the bars appear.
-struct LayoutPicker: View {
-    @Binding var selection: BarLayout
+/// App icon and name for a bundle ID.
+private struct AppLabel: View {
+    let bundleID: String
 
     var body: some View {
-        HStack(spacing: 14) {
-            ForEach(BarLayout.allCases) { layout in
-                Button {
-                    withAnimation(.snappy) { selection = layout }
-                } label: {
-                    VStack(spacing: 8) {
-                        LayoutThumbnail(layout: layout, isSelected: selection == layout)
-                        Text(layout.title)
-                            .font(.callout)
-                            .foregroundStyle(selection == layout ? .primary : .secondary)
-                    }
-                    .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
+        let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleID)
+        Label {
+            Text(url.map { FileManager.default.displayName(atPath: $0.path) } ?? bundleID)
+        } icon: {
+            if let url {
+                Image(nsImage: NSWorkspace.shared.icon(forFile: url.path))
+                    .resizable()
+                    .frame(width: 20, height: 20)
+            } else {
+                Image(systemName: "app.dashed")
             }
         }
-        .frame(maxWidth: .infinity)
-    }
-}
-
-private struct LayoutThumbnail: View {
-    let layout: BarLayout
-    let isSelected: Bool
-
-    var body: some View {
-        let screen = RoundedRectangle(cornerRadius: 8, style: .continuous)
-        ZStack {
-            screen.fill(
-                LinearGradient(
-                    colors: [Color(red: 0.36, green: 0.55, blue: 0.95), Color(red: 0.62, green: 0.4, blue: 0.9)],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-            )
-            HStack {
-                bar(visible: layout != .right)
-                Spacer()
-                bar(visible: layout != .left)
-            }
-            .padding(5)
-        }
-        .frame(width: 112, height: 72)
-        .overlay(
-            screen.strokeBorder(isSelected ? Color.accentColor : Color.primary.opacity(0.12), lineWidth: isSelected ? 3 : 1)
-        )
-        .shadow(color: .black.opacity(isSelected ? 0.18 : 0.08), radius: isSelected ? 6 : 3, y: 2)
-    }
-
-    private func bar(visible: Bool) -> some View {
-        Capsule()
-            .fill(.white.opacity(0.75))
-            .overlay(Capsule().strokeBorder(.white, lineWidth: 0.5))
-            .frame(width: 9, height: 44)
-            .opacity(visible ? 1 : 0)
     }
 }
