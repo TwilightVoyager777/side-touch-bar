@@ -27,8 +27,10 @@ final class BarState: ObservableObject {
     @Published var content: BarContent
     /// True while the user is dragging a slider, so the bar must not auto-hide.
     @Published var isInteracting = false
-    /// Tallest the bar may get on the current screen.
-    @Published var maxBarHeight: CGFloat = 800
+    /// Sizes for the current screen, chosen by `BarSizer`.
+    @Published var metrics = BarMetrics.standard
+    /// Forces a preset instead of the frontmost app's; used for measuring.
+    var presetOverride: AppPreset?
 
     // View state lives here instead of SwiftUI `@State`, whose macro plugin
     // ships only with full Xcode, not the Command Line Tools.

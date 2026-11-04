@@ -5,9 +5,12 @@ struct AppRegionView: View {
     @ObservedObject var state: BarState
     @ObservedObject private var frontmost = FrontmostAppMonitor.shared
     @ObservedObject private var permissions = Permissions.shared
+    @Environment(\.barMetrics) private var metrics
+
+    private var preset: AppPreset { state.presetOverride ?? frontmost.preset }
 
     var body: some View {
-        VStack(spacing: BarMetrics.spacing) {
+        VStack(spacing: metrics.spacing) {
             BarButton(icon: .text("esc"), help: "Esc") { ActionRunner.run(.escape) }
             BarButton(icon: .text("fn"), help: "功能键 F1–F12", tint: state.showFunctionKeys ? .accentColor : nil) {
                 withAnimation(BarAnimation.morph) { state.showFunctionKeys.toggle() }
@@ -29,16 +32,16 @@ struct AppRegionView: View {
                     Image(nsImage: icon)
                         .resizable()
                         .interpolation(.high)
-                        .frame(width: 32, height: 32)
-                        .padding(.vertical, 2)
+                        .frame(width: metrics.appIconSize, height: metrics.appIconSize)
+                        .padding(.vertical, 2 * metrics.scale)
                         .help(frontmost.app?.localizedName ?? "")
                 }
-                ItemGroupsView(groups: frontmost.preset.groups)
-                    .id(frontmost.preset.id)
+                ItemGroupsView(groups: preset.groups)
+                    .id(preset.id)
                     .transition(.blurReplace)
             }
         }
-        .animation(BarAnimation.morph, value: frontmost.preset.id)
+        .animation(BarAnimation.morph, value: preset.id)
     }
 }
 
@@ -47,9 +50,10 @@ struct AppRegionView: View {
 /// expanding the strip replaces the app region, and fn keys take the whole bar.
 struct CombinedBarView: View {
     @ObservedObject var state: BarState
+    @Environment(\.barMetrics) private var metrics
 
     var body: some View {
-        VStack(spacing: BarMetrics.spacing) {
+        VStack(spacing: metrics.spacing) {
             if state.stripMode == .compact {
                 AppRegionView(state: state)
                     .transition(.blurReplace)

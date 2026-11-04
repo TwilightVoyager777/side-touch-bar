@@ -5,9 +5,10 @@ import SwiftUI
 struct ControlStripView: View {
     @ObservedObject var state: BarState
     @ObservedObject private var settings = Settings.shared
+    @Environment(\.barMetrics) private var metrics
 
     var body: some View {
-        VStack(spacing: BarMetrics.spacing) {
+        VStack(spacing: metrics.spacing) {
             switch state.stripMode {
             case .compact:
                 compact

@@ -10,23 +10,25 @@ struct LevelSliderPanel: View {
     @ObservedObject var state: BarState
     let onClose: () -> Void
 
+    @Environment(\.barMetrics) private var metrics
+
     var body: some View {
-        VStack(spacing: BarMetrics.spacing) {
+        VStack(spacing: metrics.spacing) {
             BarButton(icon: .symbol("xmark"), help: "关闭", action: onClose)
             BarDivider()
 
             if state.isLevelAvailable {
                 symbol(highSymbol)
-                VerticalSlider(value: $state.levelValue, height: 220) { editing in
+                VerticalSlider(value: $state.levelValue) { editing in
                     state.isInteracting = editing
                 } onChange: { newValue in
                     apply(newValue)
                 }
                 symbol(lowSymbol)
                 Text("\(Int((state.levelValue * 100).rounded()))")
-                    .font(.system(size: 11, weight: .semibold, design: .rounded).monospacedDigit())
+                    .font(.system(size: metrics.captionSize, weight: .semibold, design: .rounded).monospacedDigit())
                     .foregroundStyle(.secondary)
-                    .padding(.bottom, 2)
+                    .padding(.bottom, 2 * metrics.scale)
             } else {
                 // No direct control (e.g. external display): fall back to step buttons.
                 BarButton(icon: .symbol(highSymbol), help: "增加") { ActionRunner.run(stepUp) }
@@ -70,9 +72,9 @@ struct LevelSliderPanel: View {
 
     private func symbol(_ name: String) -> some View {
         Image(systemName: name)
-            .font(.system(size: 13, weight: .medium))
+            .font(.system(size: metrics.textSize, weight: .medium))
             .foregroundStyle(.secondary)
-            .frame(height: 20)
+            .frame(height: 20 * metrics.scale)
     }
 
     private func load() {
@@ -96,14 +98,14 @@ struct LevelSliderPanel: View {
 
 struct VerticalSlider: View {
     @Binding var value: Double
-    var height: CGFloat
     var onEditingChanged: (Bool) -> Void = { _ in }
     var onChange: (Double) -> Void = { _ in }
 
-    private let knob: CGFloat = 26
-    private let trackWidth: CGFloat = 8
+    @Environment(\.barMetrics) private var metrics
 
     var body: some View {
+        let knob = metrics.knobSize
+        let trackWidth = metrics.trackWidth
         GeometryReader { proxy in
             let travel = proxy.size.height - knob
             ZStack(alignment: .bottom) {
@@ -133,6 +135,6 @@ struct VerticalSlider: View {
                     .onEnded { _ in onEditingChanged(false) }
             )
         }
-        .frame(width: BarMetrics.buttonSize, height: height)
+        .frame(width: metrics.buttonSize, height: metrics.sliderHeight)
     }
 }

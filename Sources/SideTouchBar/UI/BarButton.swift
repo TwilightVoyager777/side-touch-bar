@@ -7,10 +7,12 @@ struct BarButton: View {
     var tint: Color?
     let action: () -> Void
 
+    @Environment(\.barMetrics) private var metrics
+
     var body: some View {
         Button(action: action) {
             BarIconView(icon: icon)
-                .frame(width: BarMetrics.buttonSize, height: BarMetrics.buttonSize)
+                .frame(width: metrics.buttonSize, height: metrics.buttonSize)
                 .contentShape(Circle())
         }
         .buttonStyle(GlassBarButtonStyle(tint: tint))
@@ -21,15 +23,17 @@ struct BarButton: View {
 struct BarIconView: View {
     let icon: BarIcon
 
+    @Environment(\.barMetrics) private var metrics
+
     var body: some View {
         switch icon {
         case .symbol(let name):
             Image(systemName: name)
-                .font(.system(size: 17, weight: .medium))
+                .font(.system(size: metrics.symbolSize, weight: .medium))
                 .symbolRenderingMode(.hierarchical)
         case .text(let text):
             Text(text)
-                .font(.system(size: 13, weight: .semibold, design: .rounded))
+                .font(.system(size: metrics.textSize, weight: .semibold, design: .rounded))
         }
     }
 }
@@ -59,19 +63,23 @@ struct GlassBarButtonStyle: ButtonStyle {
 }
 
 struct BarDivider: View {
+    @Environment(\.barMetrics) private var metrics
+
     var body: some View {
         Capsule()
             .fill(Color.primary.opacity(0.15))
-            .frame(width: 24, height: 1.5)
-            .padding(.vertical, 3)
+            .frame(width: metrics.dividerWidth, height: 1.5)
+            .padding(.vertical, 3 * metrics.scale)
     }
 }
 
 struct ItemGroupsView: View {
     let groups: [[BarItem]]
 
+    @Environment(\.barMetrics) private var metrics
+
     var body: some View {
-        VStack(spacing: BarMetrics.spacing) {
+        VStack(spacing: metrics.spacing) {
             ForEach(Array(groups.enumerated()), id: \.offset) { index, group in
                 if index > 0 { BarDivider() }
                 ForEach(group) { item in
