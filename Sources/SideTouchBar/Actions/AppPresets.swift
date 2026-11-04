@@ -164,6 +164,10 @@ enum AppPresets {
             "com.googlecode.iterm2",
             "com.mitchellh.ghostty",
             "dev.warp.Warp-Stable",
+            "net.kovidgoyal.kitty",
+            "com.github.wez.wezterm",
+            "org.alacritty",
+            "co.zeit.hyper",
         ],
         groups: [
             [

@@ -1,195 +1,273 @@
+<div align="center">
+
 # Side Touch Bar
 
-[English](README.md) | 简体中文
+**把 MacBook Touch Bar 竖过来，变成屏幕边缘的一条液态玻璃侧边栏。**
 
-把以前 MacBook Touch Bar 竖过来放到屏幕右侧，为将来的触屏 MacBook 准备。采用 macOS 26 的液态玻璃（Liquid Glass）风格。界面支持中文和英文。
+为将来的触屏 Mac 设计，现在用鼠标或触控板也能完整使用。
+
+[![CI](https://github.com/TwilightVoyager777/side-touch-bar/actions/workflows/ci.yml/badge.svg)](https://github.com/TwilightVoyager777/side-touch-bar/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/TwilightVoyager777/side-touch-bar?include_prereleases&sort=semver)](https://github.com/TwilightVoyager777/side-touch-bar/releases)
+![Platform](https://img.shields.io/badge/macOS-26%2B-blue?logo=apple)
+![Swift](https://img.shields.io/badge/Swift-6-orange?logo=swift)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+
+[安装](#安装) · [功能](#功能) · [工作原理](#工作原理) · [常见问题](#常见问题) · [English](README.md)
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/preview-dark.jpg">
+  <img src="docs/images/preview-light.jpg" alt="Side Touch Bar 显示 Finder 按钮、VS Code 调试、播放控件和 Claude Code 确认提示" width="640">
+</picture>
+
+<sub>图片由应用自身的 SwiftUI 界面渲染，液态玻璃材质在图中为近似效果。</sub>
+
+</div>
+
+---
+
+## 为什么做这个
+
+在触屏笔记本上，屏幕底部是最不适合放按钮的位置：双手在键盘上，转轴挡着，一按屏幕就晃。屏幕两侧不一样：可以用手指从背面扶住屏幕，用拇指点按；而且 16:10 的屏幕横向有富余，不像底部那样占用宝贵的高度。
+
+Side Touch Bar 把 Touch Bar 竖着放到了这里：从上到下是 **esc → 应用控件 → 控制条**。
+
+## 亮点
+
+- **还原 Touch Bar**：控制条、应用控件、按住 fn 显示 F 键、原版的显示模式和自定义。
+- **跟随应用的按钮**：浏览器、编程工具、终端、苹果自带应用，其他应用也能自己加按钮。
+- **统一样式的播放控件**：从浏览器里的视频到 IINA、Spotify 都一样。
+- **为 AI 编程设计**：在侧边栏上直接确认 Claude Code 的请求，看到哪个 AI 在等你，按住说话写提示词。
+- **为触屏设计**：8.8mm 的按钮、长按确认、按住连发、按住滑动调节、边缘手势。
+- **原生、轻量**：Swift 和 SwiftUI 编写，不联网，隐藏时暂停后台工作。
 
 ## 安装
 
-需要 **macOS 26** 或更高版本，同时支持 Apple 芯片和 Intel。
+### 系统要求
+
+| | |
+|---|---|
+| macOS | 26 Tahoe 或更高版本 |
+| Mac | Apple 芯片或 Intel（通用版本） |
+| 从源码构建 | 苹果命令行工具（`xcode-select --install`），不需要 Xcode |
 
 ### 下载
 
-1. 在 [Releases](https://github.com/TwilightVoyager777/side-touch-bar/releases) 下载最新的 `SideTouchBar-x.y.z.dmg`（或 `.zip`），把 SideTouchBar 拖到"应用程序"。
-2. 应用没有经过苹果公证，第一次打开会被拦下：先打开一次，再到 **系统设置 › 隐私与安全性** 点 **仍要打开**；或者在终端运行
-   `xattr -dr com.apple.quarantine /Applications/SideTouchBar.app`
+1. 在 [Releases](https://github.com/TwilightVoyager777/side-touch-bar/releases) 下载最新的 **SideTouchBar-x.y.z.dmg**，把 SideTouchBar 拖到"应用程序"。
+2. 应用没有经过苹果公证，第一次打开会被拦下。先打开一次，再到 **系统设置 › 隐私与安全性** 点 **仍要打开**；或者运行：
+   ```bash
+   xattr -dr com.apple.quarantine /Applications/SideTouchBar.app
+   ```
 3. 按提示授予 **辅助功能** 权限。
 
-### 从源码安装
-
-只需要 Command Line Tools（`xcode-select --install`），不需要 Xcode：
+### 从源码构建
 
 ```bash
 git clone https://github.com/TwilightVoyager777/side-touch-bar.git
 cd side-touch-bar
-scripts/install.sh        # 或 make install
+make install            # 构建、安装到"应用程序"（或 ~/Applications）并打开
 ```
-
-它会构建应用、装到"应用程序"文件夹（没有写入权限时装到 `~/Applications`）并打开。
 
 ### 卸载
 
 ```bash
-scripts/uninstall.sh      # 或 make uninstall
+make uninstall          # 或 scripts/uninstall.sh
 ```
 
-会先移除装过的 AI 状态提醒（恢复你的 Claude Code、OpenCode、Codex 配置）和登录项，再删除应用、偏好设置、数据和已授予的权限。
+卸载脚本会先移除装过的 AI 状态提醒（恢复你的 Claude Code、OpenCode、Codex 配置）和登录项，再删除应用、偏好设置、数据和已授予的权限。
+
+## 快速上手
+
+第一次启动时，**设置 › 开始** 会带你完成权限授权、界面语言（中文或英文）和登录时启动的设置。之后侧边栏停在主显示器的右侧边缘，平时只露出一条细把手。
+
+| 操作 | 鼠标 | 触屏 |
+|---|---|---|
+| 唤出侧边栏 | 把指针移到屏幕边缘 | 从边缘往里滑，或点一下把手 |
+| 收起侧边栏 | 移开指针（或等待） | 在栏上往外滑 |
+| 调节亮度、音量 | 点一下打开滑条 | 按住图标上下拖动 |
+| 连续调音量、缩放、快进… | 按住按钮 | 按住按钮 |
+| 执行危险操作 | 按住 0.6 秒直到进度环填满 | 同左 |
+| 显示 F1–F12 | 按住 **fn**（🌐） | 按住 **fn**（🌐） |
+
+从菜单栏图标打开 **设置**（⌘,），可以选择侧边栏显示什么、自定义控制条、添加按钮和设置 AI 集成。
 
 ## 功能
 
-布局和原版 Touch Bar 一致，从左到右变成从上到下：**esc → 应用控件 → 控制条**。
+### Touch Bar 基础功能
 
-- **控制条（Control Strip）**
-  - 收起时：默认亮度、音量、静音、Siri，可在设置里自定义（最多 6 个）
-  - 展开后（Touch Bar 默认完整控制条）：亮度 ±、调度中心、启动台、键盘背光 ±、上一首/播放/下一首、音量 ±、静音、Siri；展开时占用应用控件的位置
-  - 点亮度、音量、键盘背光会变成竖向滑条
-  - 可选按钮：截屏、锁屏、显示桌面、聚焦搜索、夜览、深色模式、切换输入法、表情与符号、快捷指令、屏幕保护程序、睡眠、播放/暂停
-- **应用控件**：跟随当前应用变化，按钮多的应用分成几页，顶部的按钮切换页面；其他应用显示通用按钮
-  - **表情**：点表情按钮，应用控件变成可滚动的表情列表，点一下直接输入到当前应用，最近用过的排在前面
-- **编程工具**：VS Code / Cursor / Windsurf / Zed、JetBrains 全系（IDEA、WebStorm、PyCharm、GoLand、CLion、Rider、Android Studio…）、Xcode
-  - 分页：运行（运行、调试、停止、断点、终端、发给 AI）/ 导航（快速打开、转到定义、查找引用、返回前进、下一个错误）/ 编辑（注释、格式化、重命名、快速修复、面板）/ Git（JetBrains）/ AI（Cursor、Copilot 对话）
-  - **调试页**：调试时会根据菜单状态自动切换到继续、单步跳过/进入/跳出、断点
-- **浏览器**：分页：浏览 / **标签页**（列出打开的标签页，点击切换）/ 页面（**触控滚动区**、顶部底部、缩放、查找）/ 工具（下载、历史、书签、阅读模式、开发者工具）/ 网站（设置里的常用网站）；可以把当前网页发给 AI
-- **AI 编程**
-  - 终端里运行 Claude Code、Codex、OpenCode、Gemini 时：**是 / 总是允许 / 否**、切换模式、语音输入、截图、快捷输入（提示词和斜杠命令），"更多"页有回退、切换模型、后台、任务清单等
-  - Claude、OpenCode、ChatGPT 桌面版：新会话、搜索、切换会话、侧边栏、终端、改动（按菜单名称点击，不怕快捷键变化）
-  - **语音输入**：按住麦克风说话，松开后转成文字输入（优先本机离线识别）
-  - **把选中代码发给 AI**：带上文件路径和代码格式，粘贴到最近使用的 AI（不会自动发送）
-  - **状态提醒**（需要在设置里安装）：边缘把手变色（橙色等你确认、绿色完成、蓝色运行中），需要确认时侧边栏自动滑出，可以直接点是/否；会话列表点击跳到对应终端；Claude Code 还能显示上下文用量
-- **正在播放**（所有应用统一样式）：当前应用在播放视频或音乐时，应用控件自动换成播放控件：专辑封面、标题、可拖动的进度条和时间、上一首/播放/下一首（视频是快退/快进，步长可设置）、音量滑条
-  - **更多**：倍速（0.5–2×）、全屏、画中画、字幕；音乐是随机、循环、喜欢
-  - **音频输出**：切换扬声器、耳机、AirPods、显示器、AirPlay
-  - 专门的播放器（音乐、Spotify、QuickTime、IINA、VLC、TV、播客等）暂停时也会显示
-  - 其他应用在后台播放时，控制条里会出现"正在播放"按钮（显示该应用的图标），点开是同样的播放控件
-- **自定义按钮**：在设置的"按钮"页给任意应用加按钮：从它的菜单里选、录一个快捷键，或者输入一段文字
-- **触屏**
-  - 危险操作要**长按 0.6 秒**才生效（锁屏、睡眠、删除、关闭标签页、Git 推送、"总是允许"…），按住时一圈进度环填满
-  - 音量、亮度、缩放、快进快退、撤销等**按住连续触发**，越按越快
-  - 控制条的亮度、音量、键盘背光：点一下打开滑条，**按住上下拖动直接调节**
-  - **文字编辑页**：在输入框里自动出现，有光标触控区（像 iPhone 按住空格键那样拖动光标）、选择/按词开关、全选、删除一个词、拷贝粘贴撤销
-  - 从屏幕边缘**往里滑**唤出，在栏上**往外滑**收起，点边缘的把手也能唤出
-- **中英文界面**：设置 › 开始 › 语言，切换后立即生效
-- **首次引导**：设置的"开始"页列出所有权限和用途、登录时启动、签名状态
-- **触控栏显示**（和原版系统设置一样）：应用控件与控制条 / 展开的控制条 / 应用控件 / F1、F2 等键 / 快速操作（你的快捷指令）/ 空间（各个桌面，点击切换）
-- **按住 fn（🌐）键**：临时切换到设置里选的模式（默认 F1–F12），松开恢复；侧边栏隐藏时会自动滑出
-- **总是显示 F1–F12 的应用**：在这些应用里默认显示 F 键，按住 fn 显示应用控件
-- **交互**：平时自动隐藏，屏幕边缘只露一条细把手；鼠标或手指碰到边缘就滑出，离开或闲置后收起。点击不会抢走当前应用的焦点。
-- **外观**：玻璃效果（常规 / 清透），颜色（跟随系统 / 浅色 / 深色）
-- **显示器适配**：可以选显示在主显示器、内建显示器，或者跟随鼠标
+- **控制条**：默认是亮度、音量、静音、Siri；展开后是完整控制条（调度中心、启动台、键盘背光、媒体键）。可以从按钮库里选最多 6 个，包括截屏、锁屏、显示桌面、聚焦搜索、夜览、深色模式、输入法、表情、快捷指令、屏幕保护程序、睡眠。
+- **触控栏显示**：应用控件与控制条、展开的控制条、应用控件、F1/F2 等键、快速操作（你的快捷指令）、空间。
+- **fn 键**：按住 fn 显示 F 键（或其他页面），可以指定总是显示 F 键的应用。
+- **表情滑条**：可滚动的表情列表，点一下输入到当前应用。
 
-## 尺寸与显示器适配
+### 应用控件
 
-尺寸以 14/16 英寸 MacBook Pro 的默认分辨率为基准：按钮 44pt，约 8.8mm，适合手指点按。
+按钮跟随当前应用变化，按钮多的应用分成几页，在应用控件顶部切换。
 
-- **按物理尺寸换算**：读取每块显示器的实际尺寸，让按钮在不同屏幕和缩放设置下保持差不多的实际大小（14/16 寸选"更多空间"时按钮变成 52pt，选"更大字体"时是 38–39pt，实际都约 8.8mm）
-- **按高度自动收缩**：在当前屏幕上测量侧边栏最高的状态（每种应用预设、展开的控制条、滑条、fn 键），放不下就整体缩小，不会被切掉
-- **尺寸档位**：设置里可以在自动尺寸的基础上选小 / 标准 / 大
+| 类别 | 应用 | 主要功能 |
+|---|---|---|
+| 浏览器 | Safari、Chrome、Arc、Edge、Firefox、Brave | 标签页列表、触控滚动区、缩放、查找、下载、阅读模式、开发者工具、常用网站 |
+| 编程工具 | VS Code、Cursor、Windsurf、Zed、JetBrains 全系、Android Studio、Xcode | 运行、导航、编辑、Git、AI 几页；调试时自动切到调试页 |
+| 终端 | 终端、iTerm2、Ghostty、Warp、kitty、WezTerm、Alacritty | 标签页、中断、清屏；运行 AI 时换成 AI 按钮 |
+| AI 应用 | Claude、OpenCode、ChatGPT | 会话、搜索、侧边栏、终端、改动（通过菜单点击） |
+| 苹果应用 | 访达、邮件、日历、预览、信息、备忘录、Pages、Keynote、计算器、照片 | Touch Bar 上熟悉的那些操作 |
+| 其他应用 | — | 常用编辑操作，输入时显示文字编辑页 |
 
-查看各种常见屏幕下的计算结果：
+### 播放控件
 
-```bash
-swift build && .build/debug/SideTouchBar --sizing-report
-```
+当前应用播放视频或音乐时，应用控件会换成统一的播放器：封面、带已播放/剩余时间的进度条、播放按钮、音量、**倍速**、**全屏**、**画中画**、**字幕**、**随机/循环**，以及**音频输出切换**（扬声器、AirPods、显示器、AirPlay）。其他应用在后台播放时，控制条里会出现"正在播放"按钮，和原版 Touch Bar 一样。
 
-## 开发
+### AI 编程
 
-```bash
-make run                      # 构建调试版并打开（scripts/build-app.sh debug）
-make build                    # 构建发布版到 build/SideTouchBar.app
-make test                     # 检查翻译表并运行测试
-make package                  # 构建通用版并打包 dist/*.dmg、*.zip
-```
+- **终端里的 AI**：运行 Claude Code、Codex、OpenCode 或 Gemini 时，侧边栏显示 **是 / 总是允许 / 否**、切换权限模式、语音输入、截图，以及一键输入的提示词和斜杠命令。
+- **按住说话**：把说的话转成文字输入到当前应用，优先使用本机离线识别。
+- **发送上下文**：把选中的代码（带文件路径）、当前网页或一块屏幕截图发给最近使用的 AI 工具。
+- **状态提醒**：AI 等你确认时，边缘把手变成橙色；完成时变绿；运行中是蓝色。需要确认时侧边栏会自动滑出，不用切换窗口就能回答；会话列表可以直接跳到对应的终端。Claude Code 还会用一个小圆环显示上下文用量。详见 [AI 状态提醒](#ai-状态提醒)。
 
-首次启动会打开设置的"开始"页。之后可以从菜单栏图标进入"设置…"（⌘,）。
+### 触屏
 
-### 发布新版本
+- **长按确认**：锁屏、睡眠、删除、关闭标签页、Git 推送、"总是允许"。
+- **按住连发**：音量、亮度、缩放、快进快退、撤销。
+- **文字编辑页**：输入时出现，有 iPhone 那样的光标触控区、选择和按词开关、全选、删除一个词、拷贝、粘贴、撤销。
+- **边缘手势**：滑入唤出、滑出收起。
 
-1. 修改 `Resources/Info.plist` 里的 `CFBundleShortVersionString`，并在 `CHANGELOG.md` 记录改动。
-2. 提交后打标签并推送：`git tag v0.2.0 && git push origin v0.2.0`。
-3. GitHub Actions 会运行测试、打包，并创建带 dmg、zip 和校验和的 Release。
+### 自定义
 
-### 固定签名（推荐）
+- **自定义按钮**：给任意应用加按钮，可以从它的菜单里选、录一个快捷键，或者输入一段文字。
+- **外观**：常规或清透玻璃，浅色、深色或跟随系统。
+- **显示器**：主显示器、内建显示器或鼠标所在的显示器；小、标准、大三档尺寸。
 
-默认是临时签名，每次重新构建后系统可能要求重新授权。运行一次：
+## AI 状态提醒
 
-```bash
-scripts/create-signing-identity.sh
-```
-
-它会在登录钥匙串里创建一个本机自签名证书"SideTouchBar Local Signing"，之后 `build-app.sh` 会自动用它签名，权限不再丢失。第一次用它签名时系统会询问是否允许 codesign 使用这个密钥，选"始终允许"。
-
-### 测试
-
-```bash
-scripts/test.sh
-```
-
-先检查英文翻译表（没有重复、没有遗漏），再运行测试：状态提醒的安装与移除（全部在临时文件夹里，不碰真实配置）、会话状态变化、AI 程序识别、数据模型、尺寸计算、翻译占位符。
-
-## 权限
-
-发送快捷键、媒体键、esc、输入表情，以及识别 fn 键，都需要 **辅助功能** 权限：系统设置 → 隐私与安全性 → 辅助功能 → 打开 SideTouchBar。
-没有权限时，侧边栏会显示一个橙色警告按钮，设置窗口里也有授权入口。
-
-> 用 ad-hoc 签名时，每次重新构建签名都会变，系统可能会认为是新应用，导致权限失效。
-> 遇到这种情况，在设置里删除 SideTouchBar 再重新添加，或者执行
-> `tccutil reset Accessibility com.dest1ny.SideTouchBar`。
-> 如果有开发者证书，可以用 `SIGN_IDENTITY="Apple Development: …" scripts/build-app.sh` 避免这个问题。
-
-## 状态提醒的安装
-
-在设置的"AI 编程"页按需安装，装之前会说明会改哪个文件，并先备份：
+集成是可选的，在 **设置 › AI 编程** 里按工具分别安装。每次安装都会说明具体改动、先备份要修改的文件，并且可以在同一个地方或用卸载脚本撤销。
 
 | 工具 | 改动 |
 |---|---|
-| Claude Code 状态 | 在 `~/.claude/settings.json` 的 `hooks` 里给 9 个事件各加一条后台命令（`async`，不拖慢 Claude Code） |
-| Claude Code 上下文用量 | 把 `statusLine` 换成包装脚本，记录数据后照常输出你原来的状态栏 |
-| OpenCode 状态 | 新建 `~/.config/opencode/plugins/sidetouchbar.js`，不改配置文件 |
-| Codex 完成提醒 | 在 `~/.codex/config.toml` 开头加一行 `notify`（已有 notify 时不修改） |
+| Claude Code 状态 | 在 `~/.claude/settings.json` 里给 9 个事件各加一条 `async` 后台命令 |
+| Claude Code 上下文用量 | 包装 `statusLine`，你原来的状态栏照常输出 |
+| OpenCode 状态 | 新建 `~/.config/opencode/plugins/sidetouchbar.js`，不改你的配置 |
+| Codex 完成提醒 | 在 `~/.codex/config.toml` 加一行 `notify`（已有时不修改） |
 
-这些命令只在 Side Touch Bar 运行时才写入事件，事件放在 `~/Library/Application Support/SideTouchBar/agents/`。随时可以在设置里移除。
-
-## 开发者自定义
-
-- 应用按钮、完整控制条、F 键：`Sources/SideTouchBar/Actions/AppPresets.swift`；编程工具：`IDEPresets.swift`；AI：`Sources/SideTouchBar/AI/AIPresets.swift`
-  - 每个 `AppPreset` 用 `bundleIDs` 匹配应用（查看 bundle ID：`osascript -e 'id of app "Safari"'`），新增后加到 `all` 数组
-- 收起控制条的可选按钮：`ControlItem`（`Sources/SideTouchBar/Actions/BarItem.swift`）
-
-## 目录结构
-
-```
-Sources/SideTouchBar/
-  App/       应用入口、菜单栏、设置数据
-  Settings/  设置窗口
-  Bar/       侧边面板（NSPanel）、展开/收起逻辑
-  UI/        液态玻璃风格的 SwiftUI 视图
-  Actions/   按钮定义、各应用预设（含编程工具）与执行
-  AI/        AI 场景识别、AI 按钮、语音输入、会话状态与集成安装
-  System/    快捷键、菜单点击、文字输入、进程、媒体键、音量与音频输出、亮度、键盘背光、夜览、深色模式、空间、快捷指令、表情、正在播放、浏览器标签页、权限
-Helpers/     读取"正在播放"信息的小库（由 build-app.sh 编译进应用）
+```mermaid
+sequenceDiagram
+    participant Agent as Claude Code
+    participant Hook as 钩子脚本
+    participant Inbox as 事件收件箱
+    participant Bar as Side Touch Bar
+    Agent->>Hook: PermissionRequest（后台运行，不阻塞）
+    Hook->>Inbox: JSON 事件（仅在应用运行时写入）
+    Inbox-->>Bar: 文件变化通知
+    Bar->>Bar: 把手变橙，侧边栏滑出
+    Bar->>Agent: 在它的终端里按"是 / 否"
 ```
 
-## 说明
+## 权限与隐私
 
-- 选"跟随鼠标"时，两块显示器相邻的那条边不容易停住鼠标，所以那一侧比较难唤出侧边栏。
-- macOS 不允许给侧边栏"预留"屏幕区域，所以它浮在窗口上方，并默认自动隐藏。
-- 程序坞放在右侧时会和侧边栏冲突，建议把程序坞放在底部。
-- 很多第三方外接键盘的 fn 键只在键盘内部起作用，不会通知系统，这类键盘上按住 fn 不会切换触控栏。
-- "空间"切换桌面用的是 ⌃← / ⌃→（系统默认开启）；跳到较远的桌面时会连续切换几次。
-- 原版 Touch Bar 的输入建议、文本格式、照片缩略图滑条，内容来自各个应用自己；没有 Touch Bar 硬件时应用不会生成这些内容，所以做不了。
-- 在 macOS 27 上，控制中心不再通过辅助功能接口暴露菜单栏图标，所以没有"通知中心""控制中心""勿扰模式"按钮。
-- "正在播放"：macOS 15.4 起，系统只把播放信息提供给苹果签名的程序，所以应用会让系统自带的 `/usr/bin/perl` 加载 `Helpers/NowPlayingHelper.m` 编译出的小库来读取（播放/暂停、拖动进度不受限制，直接发送）。这是一种绕过办法，以后的 macOS 可能会封掉，或者移除自带的 perl。
-- 亮度、键盘背光、夜览、深色模式用到了系统私有接口（和系统自带按键走同一套），不同 macOS 版本可能失效，失效时会退回到模拟按键。
-- 编程工具的按钮按各工具 macOS 默认快捷键配置，尚未在真实安装上实测；调试页的自动切换依赖菜单的可用状态，有的应用只在打开菜单时才刷新，这时用顶部按钮手动切换。ChatGPT 桌面版同样没有实测。
-- Codex 的按键（y / a）和状态提醒、OpenCode 终端里的确认按键（回车 / esc）没有实测。
-- 触控滚动区是用 ↑ / ↓ 方向键滚动网页的；光标在输入框里时会移动光标而不是滚动。
-- 截图发给 AI 用的是系统 `screencapture`，第一次使用时系统可能要求给 Side Touch Bar 屏幕录制权限。
-- 侧边栏收起时，菜单状态、输入框、终端里的 AI 检查和音量读取都会暂停，以省电。
-- 只用 Command Line Tools 时，SwiftPM 默认的构建系统偶尔加载不到测试用的宏插件，所以 `scripts/test.sh` 用原生构建系统并显式指定路径。
-- 界面文字以中文为源语言，英文翻译在 `Sources/SideTouchBar/App/L10n+English.swift`；新增界面文字后运行 `scripts/check-l10n.py` 检查是否漏翻。
-- 代码没有使用 SwiftUI 的 `@State`：Command Line Tools 缺少它所需的宏插件，视图状态都放在 `BarState` 等 `ObservableObject` 里。
-- 不联网：除了你主动打开的网页链接，应用不发送任何网络请求。
+| 权限 | 是否必需 | 用途 |
+|---|---|---|
+| 辅助功能 | 是 | 发送快捷键和媒体键、点击菜单项、识别 fn 键、读取浏览器标签页和输入框状态 |
+| 麦克风、语音识别 | 否 | 按住说话 |
+| 屏幕录制 | 否 | 截图发给 AI |
+
+Side Touch Bar **不发送任何网络请求**，唯一的例外是你从常用网站里主动打开的链接。设置保存在应用的偏好设置里；AI 状态提醒用的事件放在 `~/Library/Application Support/SideTouchBar` 下的一个小文件夹里。
+
+> [!NOTE]
+> 部分功能依赖系统私有接口或非官方方式，以后的 macOS 版本可能会改变。因此本应用不能通过 Mac App Store 分发。
+> - **正在播放**：macOS 15.4 起，MediaRemote 只向苹果签名的程序提供信息，所以应用在系统自带的 `/usr/bin/perl` 里运行一个小程序（`Helpers/NowPlayingHelper.m`）来读取播放信息。这个思路来自 [mediaremote-adapter](https://github.com/ungive/mediaremote-adapter)。
+> - **亮度、键盘背光、夜览、深色模式、空间**：使用私有框架（DisplayServices、CoreBrightness、SkyLight），不可用时退回到模拟按键。
+
+## 工作原理
+
+```mermaid
+flowchart LR
+    Frontmost["当前应用"] --> Resolver["按钮选择<br/>应用 · AI · 自定义按钮"]
+    Resolver --> Views["侧边栏界面<br/>SwiftUI + 液态玻璃"]
+    Edge["边缘控制<br/>唤出 · 收起 · 尺寸"] --> Views
+    Views --> Actions["动作<br/>按键 · 菜单 · 文字"]
+    Actions -->|"CGEvent · 辅助功能"| Apps["其他应用"]
+    Perl["/usr/bin/perl + 小程序"] -->|"播放信息 JSON"| Views
+    Hooks["AI 钩子和插件"] -->|"事件收件箱"| Monitor["会话监控"] --> Views
+```
+
+- **边缘面板**：不抢焦点的浮动面板，点侧边栏不会打断你正在用的应用。
+- **动作**：优先通过辅助功能按名称点击菜单项，不怕应用改快捷键；找不到时再发送按键。
+- **尺寸**：按显示器的物理尺寸换算，让按钮在任何屏幕上都保持 14/16 寸 MacBook Pro 上的 44pt ≈ 8.8mm；并测量每个页面最高的状态，放不下就整体缩小而不是被切掉。
+- **省电**：侧边栏隐藏时，菜单检查、输入框检查、AI 识别和音量读取都会暂停。
+
+## 兼容性
+
+| 显示器 | 按钮大小 |
+|---|---|
+| 14/16 寸 MacBook Pro，默认分辨率 | 44pt · 8.8mm |
+| 14/16 寸 MacBook Pro，"更多空间" | 52pt · 8.7mm |
+| 14/16 寸 MacBook Pro，"更大字体" | 38–39pt · 8.7mm |
+| 13 寸 MacBook Air | 44pt · 8.6mm |
+| 27 寸外接显示器 | 37–38pt · 8.7mm |
+
+运行 `.build/debug/SideTouchBar --sizing-report --verbose` 可以查看每种布局的具体数值。
+
+## 常见问题
+
+<details>
+<summary><b>macOS 提示无法打开应用。</b></summary>
+
+发布的版本没有经过公证。先打开一次，再到 **系统设置 › 隐私与安全性** 点 **仍要打开**，或运行 `xattr -dr com.apple.quarantine /Applications/SideTouchBar.app`。
+</details>
+
+<details>
+<summary><b>按钮点了没反应。</b></summary>
+
+需要 **辅助功能** 权限（设置 › 开始 里可以看到状态）。更新应用后，系统可能要求重新授权：在辅助功能列表里删掉 SideTouchBar 再加回来，或运行 `tccutil reset Accessibility com.dest1ny.SideTouchBar`。
+</details>
+
+<details>
+<summary><b>从源码构建，每次重新构建都要重新授权。</b></summary>
+
+运行一次 `scripts/create-signing-identity.sh`。它会创建一个本机自签名证书，`build-app.sh` 之后会自动使用，重新构建的应用会被系统认作同一个应用。
+</details>
+
+<details>
+<summary><b>播放控件没有出现。</b></summary>
+
+播放器需要向 macOS 报告正在播放的内容（大多数都会，包括浏览器、音乐、Spotify、IINA、QuickTime）。读取这些信息依赖 [权限与隐私](#权限与隐私) 里提到的方式，以后的 macOS 可能会封掉。
+</details>
+
+<details>
+<summary><b>按住 fn 没反应。</b></summary>
+
+很多第三方键盘在键盘内部处理 fn 键，不会通知系统。苹果的键盘没有这个问题。
+</details>
+
+<details>
+<summary><b>没有触屏能用吗？</b></summary>
+
+能。所有功能都可以用鼠标或触控板操作：把指针移到屏幕边缘就会唤出侧边栏。
+</details>
+
+<details>
+<summary><b>怎么给我常用的应用加按钮？</b></summary>
+
+在 **设置 › 按钮** 里从应用的菜单选、录一个快捷键或输入文字。想让所有人都能用，可以添加预设并提交 Pull Request，详见 [CONTRIBUTING.md](CONTRIBUTING.md)。
+</details>
+
+## 路线图
+
+- [ ] 诊断页，可导出报告
+- [ ] 旁白（VoiceOver）支持；遵循"减弱动态效果"和"降低透明度"
+- [ ] 终端里按标签页识别 AI
+- [ ] 设置和自定义按钮的导入导出
+- [ ] 经过公证的发布版本和应用图标
+- [ ] 更多应用的实测预设（欢迎反馈）
+
+## 参与贡献
+
+欢迎提交问题、更多应用的预设和翻译。开发环境、约定和测试方法见 [CONTRIBUTING.md](CONTRIBUTING.md)。
+
+## 致谢
+
+- 灵感来自苹果的 Touch Bar 和它的控制条。
+- "正在播放"的实现思路来自 [ungive/mediaremote-adapter](https://github.com/ungive/mediaremote-adapter)。
+- 图标来自 [SF Symbols](https://developer.apple.com/sf-symbols/)。
 
 ## 许可证
 
-[MIT](LICENSE)
+基于 [MIT 许可证](LICENSE) 发布。

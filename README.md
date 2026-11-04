@@ -1,125 +1,273 @@
+<div align="center">
+
 # Side Touch Bar
 
-English | [简体中文](README.zh-CN.md)
+**The MacBook Touch Bar, reimagined as a vertical Liquid Glass bar on the edge of your screen.**
+
+Built for the touch-screen Macs to come — and fully usable with a mouse or trackpad today.
 
 [![CI](https://github.com/TwilightVoyager777/side-touch-bar/actions/workflows/ci.yml/badge.svg)](https://github.com/TwilightVoyager777/side-touch-bar/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/TwilightVoyager777/side-touch-bar?include_prereleases&sort=semver)](https://github.com/TwilightVoyager777/side-touch-bar/releases)
+![Platform](https://img.shields.io/badge/macOS-26%2B-blue?logo=apple)
+![Swift](https://img.shields.io/badge/Swift-6-orange?logo=swift)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
-The MacBook Touch Bar, back as a vertical Liquid Glass bar on the right edge of the screen — designed for the touch-screen Macs to come, and usable with a mouse today.
+[Install](#installation) · [Features](#features) · [How it works](#how-it-works) · [FAQ](#faq) · [简体中文](README.zh-CN.md)
 
-The layout follows the original Touch Bar, turned on its side: **esc → app controls → Control Strip**, top to bottom.
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/preview-dark.jpg">
+  <img src="docs/images/preview-light.jpg" alt="Side Touch Bar showing Finder buttons, the VS Code debugger, playback controls and a Claude Code approval prompt" width="640">
+</picture>
 
-## Features
+<sub>Rendered from the app's own SwiftUI views; the Liquid Glass material is approximated in these images.</sub>
 
-- **Control Strip** — brightness, volume, mute and Siri; expand for the full Touch Bar strip (Mission Control, Launchpad, keyboard brightness, media keys). Tap brightness or volume for a slider, or press and drag to adjust. Customizable, with screenshot, lock, Spotlight, Night Shift, dark mode, input source, Shortcuts and more.
-- **App controls** that follow the frontmost app: browsers, Finder, terminals, Mail, Calendar, Preview, Messages, Notes, Keynote, Calculator, Photos, and paged sets for **VS Code / Cursor / Zed, JetBrains IDEs and Xcode** (run, navigate, edit, Git, AI, and a debugger page that comes forward while debugging).
-- **Browsers** — open tabs as a list, a touch scroll pad, zoom, find, tools, favorite sites, and "send this page to AI".
-- **Playback controls in one style for every app** — album art, a scrubber, transport buttons, volume, playback speed, full screen, picture in picture, subtitles, shuffle/repeat and audio output switching. Appears while the frontmost app plays; media playing elsewhere gets a Now Playing button, like on the Touch Bar.
-- **AI coding**
-  - With Claude Code, Codex, OpenCode or Gemini running in a terminal: **Yes / Always allow / No**, cycle permission mode, voice input, screenshots and one-tap prompts or slash commands.
-  - Claude, OpenCode and ChatGPT desktop apps: new session, search, switch sessions, sidebar, terminal, changes — pressed through their menus, so they survive shortcut changes.
-  - **Hold-to-talk voice input** (on-device speech recognition when available) and **send selected code** with its file path to the AI tool you used last.
-  - **Status alerts** (optional, installed from Settings): the edge handle turns orange when an agent needs approval, green when it's done, blue while it runs; the bar slides out with Yes/No when approval is needed; a session list jumps to each terminal; Claude Code context usage.
-- **Touch** — risky buttons need a 0.6 s hold (lock, delete, always allow…), volume/zoom/skip repeat while held, a text page with an iPhone-style cursor pad appears while typing, and you can swipe in from the edge to reveal the bar.
-- **Touch Bar settings** — what the bar shows (app controls with Control Strip, expanded Control Strip, app controls, F-keys, Quick Actions, Spaces), what holding **fn** shows, and apps that always show F-keys.
-- **Custom buttons** for any app, picked from its menus, recorded shortcuts, or text.
-- **Sized for 14"/16" MacBook Pro** (44 pt ≈ 8.8 mm touch targets) and adapted to other displays by physical size; it shrinks rather than clipping.
-- **English and Chinese** interface.
+</div>
 
-## Install
+---
 
-Requires **macOS 26** or later. Universal: Apple silicon and Intel.
+## Why
+
+On a touch-screen laptop, the bottom of the display is the worst place for controls: your hands are on the keyboard, the hinge gets in the way, and the lid wobbles when you press it. The side edges are different — you can hold the lid with your fingers behind it and tap with your thumb, and a 16:10 display has width to spare where a bottom bar would cost precious height.
+
+Side Touch Bar puts the Touch Bar there, turned on its side: **esc → app controls → Control Strip**, top to bottom.
+
+## Highlights
+
+- **A faithful Touch Bar** — Control Strip, app controls, F-keys on fn, the original display modes and customization.
+- **Context-aware buttons** for browsers, IDEs, terminals, Apple apps — and custom buttons for anything else.
+- **Playback controls in one style for every app**, from YouTube in a browser to IINA and Spotify.
+- **Built for AI coding** — approve Claude Code prompts from the bar, see which agent needs you, talk to write prompts.
+- **Designed for touch** — 8.8 mm targets, hold-to-confirm, hold-to-repeat, press-and-slide, edge swipes.
+- **Native and lightweight** — Swift and SwiftUI, no network access, pauses its work while hidden.
+
+## Installation
+
+### Requirements
+
+| | |
+|---|---|
+| macOS | 26 Tahoe or later |
+| Mac | Apple silicon or Intel (universal build) |
+| Building from source | Apple Command Line Tools (`xcode-select --install`); Xcode is not required |
 
 ### Download
 
-1. Get the latest `SideTouchBar-x.y.z.dmg` (or `.zip`) from [Releases](https://github.com/TwilightVoyager777/side-touch-bar/releases) and drag SideTouchBar into Applications.
-2. The app isn't notarized by Apple, so macOS blocks the first launch. Open it once, then go to **System Settings › Privacy & Security** and click **Open Anyway** — or run
-   `xattr -dr com.apple.quarantine /Applications/SideTouchBar.app`
-3. Grant **Accessibility** when asked. Settings › Start lists every permission and what it's for.
+1. Download the latest **SideTouchBar-x.y.z.dmg** from [Releases](https://github.com/TwilightVoyager777/side-touch-bar/releases) and drag SideTouchBar into Applications.
+2. The app is not notarized by Apple, so macOS blocks the first launch. Open it once, then go to **System Settings › Privacy & Security** and click **Open Anyway**. Alternatively:
+   ```bash
+   xattr -dr com.apple.quarantine /Applications/SideTouchBar.app
+   ```
+3. Grant **Accessibility** when prompted.
 
-### From source
-
-Only Apple's Command Line Tools are needed (`xcode-select --install`), not Xcode:
+### Build from source
 
 ```bash
 git clone https://github.com/TwilightVoyager777/side-touch-bar.git
 cd side-touch-bar
-scripts/install.sh        # or: make install
+make install            # builds, installs into /Applications (or ~/Applications) and opens the app
 ```
-
-It builds the app, installs it into /Applications (or ~/Applications) and opens it.
 
 ### Uninstall
 
 ```bash
-scripts/uninstall.sh      # or: make uninstall
+make uninstall          # or scripts/uninstall.sh
 ```
 
-It first removes any AI status integrations (restoring your Claude Code, OpenCode and Codex settings) and the login item, then the app, its preferences, data and granted permissions.
+The uninstaller first removes any AI status integrations — restoring your Claude Code, OpenCode and Codex settings — and the login item, then deletes the app, its preferences, data and granted permissions.
 
-## Permissions and privacy
+## Getting started
 
-| Permission | Used for |
-|---|---|
-| **Accessibility** (required) | Sending shortcuts and media keys, pressing menu items, detecting the fn key, reading browser tabs and text focus |
-| Microphone + Speech Recognition | Hold-to-talk voice input |
-| Screen Recording | Screenshot to AI |
+On first launch, **Settings › Start** walks you through permissions, the interface language (English or Chinese) and launching at login. The bar then lives at the right edge of your main display, showing only a thin handle until you reach for it.
 
-The app makes no network requests (other than opening links you choose). Some features rely on private or unusual system interfaces, and may stop working in a future macOS:
+| To | With a mouse | With touch |
+|---|---|---|
+| Show the bar | Move the pointer to the screen edge | Swipe in from the edge, or tap the handle |
+| Hide the bar | Move away (or wait) | Swipe outward across the bar |
+| Adjust brightness or volume | Click for a slider | Press the icon and drag up or down |
+| Repeat volume, zoom, skip… | Hold the button | Hold the button |
+| Run a risky action | Hold for 0.6 s until the ring fills | Same |
+| Show F1–F12 | Hold **fn** (🌐) | Hold **fn** (🌐) |
 
-- **Now Playing**: since macOS 15.4, MediaRemote only answers Apple-signed processes, so a small helper library (`Helpers/NowPlayingHelper.m`) is loaded into the system's `/usr/bin/perl` to read playback information. Commands (play/pause, seek) are sent directly.
-- **Display and keyboard brightness, Night Shift, dark mode, Spaces**: private frameworks (DisplayServices, CoreBrightness, SkyLight), with fallbacks to simulated keys.
+Open **Settings** from the menu bar icon (⌘,) to choose what the bar shows, customize the Control Strip, add buttons and set up AI integrations.
 
-For these reasons the app can't be distributed through the Mac App Store.
+## Features
+
+### Touch Bar essentials
+
+- **Control Strip** — brightness, volume, mute and Siri by default; expand for the full strip (Mission Control, Launchpad, keyboard brightness, media keys). Up to six buttons from a palette that includes screenshot, lock, show desktop, Spotlight, Night Shift, dark mode, input source, emoji, Shortcuts, screen saver and sleep.
+- **Touch Bar shows** — App Controls with Control Strip, Expanded Control Strip, App Controls, F1/F2 keys, Quick Actions (your Shortcuts) or Spaces.
+- **fn behavior** — hold fn to show F-keys (or another page); choose apps that always show F-keys.
+- **Emoji scrubber** — a scrolling emoji list that types into the focused app.
+
+### App controls
+
+Buttons follow the frontmost app. Apps with many actions get pages, switched from the top of the app controls.
+
+| Category | Apps | Highlights |
+|---|---|---|
+| Browsers | Safari, Chrome, Arc, Edge, Firefox, Brave | Open tabs as a list, touch scroll pad, zoom, find, downloads, reader, dev tools, favorite sites |
+| IDEs | VS Code, Cursor, Windsurf, Zed, JetBrains IDEs, Android Studio, Xcode | Run, navigate, edit, Git and AI pages; a debugger page that comes forward while debugging |
+| Terminals | Terminal, iTerm2, Ghostty, Warp, kitty, WezTerm, Alacritty | Tabs, interrupt, clear — or AI controls when an agent is running |
+| AI apps | Claude, OpenCode, ChatGPT | Sessions, search, sidebar, terminal, changes — pressed through menus |
+| Apple apps | Finder, Mail, Calendar, Preview, Messages, Notes, Pages, Keynote, Calculator, Photos | The Touch Bar's familiar actions |
+| Everything else | — | Common editing actions, plus a text page while typing |
+
+### Playback controls
+
+When the frontmost app plays video or music, the app controls become one consistent player: artwork, a scrubber with elapsed and remaining time, transport, volume, **playback speed**, **full screen**, **picture in picture**, **subtitles**, **shuffle/repeat** and **audio output switching** (speakers, AirPods, displays, AirPlay). Media playing in another app gets a Now Playing button in the Control Strip, just like the Touch Bar.
+
+### AI coding
+
+- **Agents in the terminal** — with Claude Code, Codex, OpenCode or Gemini running, the bar shows **Yes / Always allow / No**, permission-mode cycling, voice input, screenshots and one-tap prompts or slash commands.
+- **Hold-to-talk voice input** — speech becomes text in the focused app, using on-device recognition when available.
+- **Send context** — selected code (with its file path), the current web page or a screen region goes to the AI tool you used last.
+- **Status alerts** — the edge handle turns orange when an agent needs approval, green when it finishes and blue while it works. Approval prompts slide the bar out so you can answer without switching windows; a session list jumps straight to each terminal. Claude Code context usage appears as a small gauge. See [AI status alerts](#ai-status-alerts).
+
+### Touch
+
+- **Hold to confirm** for risky actions: lock, sleep, delete, close tab, Git push, *always allow*.
+- **Hold to repeat** for volume, brightness, zoom, skip and undo.
+- **Text page** while typing: an iPhone-style cursor pad, select and by-word toggles, select all, delete word, copy, paste, undo.
+- **Edge swipes** to show and hide the bar.
+
+### Customization
+
+- **Custom buttons** for any app, picked from its menus, recorded as a shortcut, or typed text.
+- **Appearance** — regular or clear glass, light/dark/system.
+- **Display** — main, built-in or the display under the pointer; small, standard or large size.
 
 ## AI status alerts
 
-Installed per tool from Settings › AI Coding, after a confirmation that says exactly what changes. Every edited file is backed up first, and everything can be removed from the same place (or by `scripts/uninstall.sh`).
+Integrations are optional and installed per tool from **Settings › AI Coding**. Each install explains exactly what changes, backs up the file it edits, and can be undone from the same place or by the uninstaller.
 
-| Tool | Change |
+| Tool | What changes |
 |---|---|
-| Claude Code status | One async command hook for each of 9 events in `~/.claude/settings.json` |
+| Claude Code status | One `async` command hook for each of nine events in `~/.claude/settings.json` |
 | Claude Code context usage | Wraps `statusLine`; your original status line keeps printing |
-| OpenCode status | Adds `~/.config/opencode/plugins/sidetouchbar.js`; your configuration isn't changed |
-| Codex completion | Adds a `notify` line to `~/.codex/config.toml` (skipped if you already have one) |
+| OpenCode status | Adds `~/.config/opencode/plugins/sidetouchbar.js`; your configuration is untouched |
+| Codex completion | Adds a `notify` line to `~/.codex/config.toml` (skipped if one exists) |
 
-Hooks only write events while Side Touch Bar is running, into `~/Library/Application Support/SideTouchBar/agents/`.
-
-## Development
-
-```bash
-make run          # debug build, then open it (scripts/build-app.sh debug)
-make build        # release build in build/SideTouchBar.app
-make test         # translation check + Swift Testing suite (scripts/test.sh)
-make package      # universal build packaged as dist/*.dmg and *.zip
-.build/debug/SideTouchBar --sizing-report --verbose   # bar heights on common displays
+```mermaid
+sequenceDiagram
+    participant Agent as Claude Code
+    participant Hook as Hook script
+    participant Inbox as Event inbox
+    participant Bar as Side Touch Bar
+    Agent->>Hook: PermissionRequest (async, non-blocking)
+    Hook->>Inbox: JSON event (only while the app runs)
+    Inbox-->>Bar: File system notification
+    Bar->>Bar: Handle turns orange, bar slides out
+    Bar->>Agent: "Yes" / "No" key in its terminal
 ```
 
-- **Stable signing**: ad hoc signed builds may lose their permissions on every rebuild. Run `scripts/create-signing-identity.sh` once to create a local self-signed certificate that `build-app.sh` then uses automatically.
-- **Tests** cover the integration installer (against a temporary home directory — never your real config), session status, agent detection, models, sizing and translations.
-- **Localization**: Chinese is the source language; English lives in `Sources/SideTouchBar/App/L10n+English.swift`. Run `scripts/check-l10n.py` after adding interface text.
-- **Adding app buttons**: presets are in `Sources/SideTouchBar/Actions/AppPresets.swift`, `IDEPresets.swift` and `Sources/SideTouchBar/AI/AIPresets.swift`, matched by bundle ID (`osascript -e 'id of app "Safari"'`).
-- **Releasing**: bump `CFBundleShortVersionString` in `Resources/Info.plist`, update `CHANGELOG.md`, then push a tag such as `v0.2.0`. GitHub Actions tests, packages and publishes the release.
+## Permissions and privacy
 
+| Permission | Required | Used for |
+|---|---|---|
+| Accessibility | Yes | Sending shortcuts and media keys, pressing menu items, detecting fn, reading browser tabs and text focus |
+| Microphone, Speech Recognition | No | Hold-to-talk voice input |
+| Screen Recording | No | Screenshots sent to AI tools |
+
+Side Touch Bar makes **no network requests**; links you open from favorite sites are the only exception. It stores its settings in the app's preferences and, for AI status alerts, a small event folder in `~/Library/Application Support/SideTouchBar`.
+
+> [!NOTE]
+> Some features rely on private or unofficial system interfaces and may change with future macOS releases. Because of this, the app cannot be distributed through the Mac App Store.
+> - **Now Playing**: since macOS 15.4, MediaRemote only answers Apple-signed processes, so a small helper (`Helpers/NowPlayingHelper.m`) runs inside the system's `/usr/bin/perl` to read playback information — the approach pioneered by [mediaremote-adapter](https://github.com/ungive/mediaremote-adapter).
+> - **Brightness, keyboard backlight, Night Shift, dark mode, Spaces** use private frameworks (DisplayServices, CoreBrightness, SkyLight), falling back to simulated keys.
+
+## How it works
+
+```mermaid
+flowchart LR
+    Frontmost["Frontmost app"] --> Resolver["Preset resolver<br/>app · AI agent · custom buttons"]
+    Resolver --> Views["Bar views<br/>SwiftUI + Liquid Glass"]
+    Edge["Edge controller<br/>reveal · hide · sizing"] --> Views
+    Views --> Actions["Actions<br/>keys · menus · text"]
+    Actions -->|"CGEvent · Accessibility"| Apps["Other apps"]
+    Perl["/usr/bin/perl + helper"] -->|"Now Playing JSON"| Views
+    Hooks["Agent hooks and plugins"] -->|"event inbox"| Monitor["Agent monitor"] --> Views
 ```
-Sources/SideTouchBar/
-  App/       entry point, menu bar, settings model, localization
-  Settings/  settings window
-  Bar/       edge panel, reveal/hide, sizing, preset resolution
-  UI/        Liquid Glass SwiftUI views
-  Actions/   buttons, app and IDE presets, actions
-  AI/        agent detection, AI pages, voice input, session status, integrations
-  System/    keys, menus, text input, processes, media, audio, brightness, permissions…
-Helpers/     Now Playing helper library (built by build-app.sh)
-Tests/       Swift Testing suite
-```
 
-## Known limitations
+- **Edge panel** — a non-activating floating panel, so tapping the bar never steals focus from the app you're working in.
+- **Actions** — prefer pressing menu items by name through Accessibility, which survives shortcut changes; fall back to keyboard events.
+- **Sizing** — buttons keep the 14"/16" MacBook Pro's 44 pt ≈ 8.8 mm on every display by converting with the display's physical size, and the tallest state of every page is measured so the bar shrinks instead of clipping.
+- **Energy** — menu probing, text-focus checks, agent detection and volume polling pause while the bar is hidden.
 
-- Not yet verified on real installs: the IDE presets, the ChatGPT desktop app, Codex keys and alerts, and OpenCode's terminal approval keys. Debugger pages switch automatically only when the app keeps its menu state current; the page button always works.
-- The original Touch Bar's typing suggestions and app-provided scrubbers can't be reproduced: apps only build that content when Touch Bar hardware is present.
-- Holding **fn** doesn't work on keyboards that handle fn internally (many third-party keyboards).
-- macOS can't reserve screen space for the bar, so it floats above windows and hides automatically; a Dock on the right edge conflicts with it.
+## Compatibility
+
+| Display | Button size |
+|---|---|
+| 14" / 16" MacBook Pro, default resolution | 44 pt · 8.8 mm |
+| 14" / 16" MacBook Pro, "More Space" | 52 pt · 8.7 mm |
+| 14" / 16" MacBook Pro, "Larger Text" | 38–39 pt · 8.7 mm |
+| 13" MacBook Air | 44 pt · 8.6 mm |
+| 27" external display | 37–38 pt · 8.7 mm |
+
+Run `.build/debug/SideTouchBar --sizing-report --verbose` to see the numbers for each layout.
+
+## FAQ
+
+<details>
+<summary><b>macOS says the app can't be opened.</b></summary>
+
+Releases aren't notarized. Open the app once, then click **Open Anyway** in **System Settings › Privacy & Security**, or run `xattr -dr com.apple.quarantine /Applications/SideTouchBar.app`.
+</details>
+
+<details>
+<summary><b>The buttons don't do anything.</b></summary>
+
+Side Touch Bar needs **Accessibility** permission (Settings › Start shows its status). After updating the app, macOS may need it granted again: remove SideTouchBar from the Accessibility list and add it back, or run `tccutil reset Accessibility com.dest1ny.SideTouchBar`.
+</details>
+
+<details>
+<summary><b>I build from source and lose permissions after every build.</b></summary>
+
+Run `scripts/create-signing-identity.sh` once. It creates a local self-signed certificate that `build-app.sh` uses automatically, so rebuilt apps keep their identity.
+</details>
+
+<details>
+<summary><b>Playback controls don't appear.</b></summary>
+
+The player has to report what it's playing to macOS (most do, including browsers, Music, Spotify, IINA and QuickTime). Reading that information relies on the Now Playing helper described in [Permissions and privacy](#permissions-and-privacy), which a future macOS could block.
+</details>
+
+<details>
+<summary><b>Holding fn does nothing.</b></summary>
+
+Many third-party keyboards handle fn internally and never report it to macOS. Apple keyboards work.
+</details>
+
+<details>
+<summary><b>Can I use it without a touch screen?</b></summary>
+
+Yes. Everything works with a mouse or trackpad: move the pointer to the screen edge to show the bar.
+</details>
+
+<details>
+<summary><b>How do I add buttons for my app?</b></summary>
+
+Use **Settings › Buttons** to add buttons from the app's menus, a recorded shortcut or text. To ship buttons for everyone, add a preset and open a pull request — see [CONTRIBUTING.md](CONTRIBUTING.md).
+</details>
+
+## Roadmap
+
+- [ ] Diagnostics page with an exportable report
+- [ ] VoiceOver labels; honoring Reduce Motion and Reduce Transparency
+- [ ] Per-tab agent detection in terminals
+- [ ] Import and export of settings and custom buttons
+- [ ] Notarized releases and an app icon
+- [ ] Verified presets for more apps (feedback welcome)
+
+## Contributing
+
+Bug reports, presets for more apps and translations are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for the development setup, conventions and how to run the tests.
+
+## Acknowledgements
+
+- Inspired by Apple's Touch Bar and its Control Strip.
+- The Now Playing approach builds on [ungive/mediaremote-adapter](https://github.com/ungive/mediaremote-adapter).
+- Icons are [SF Symbols](https://developer.apple.com/sf-symbols/).
 
 ## License
 
-[MIT](LICENSE)
+Released under the [MIT License](LICENSE).
