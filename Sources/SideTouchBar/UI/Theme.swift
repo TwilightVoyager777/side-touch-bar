@@ -25,10 +25,10 @@ struct BarMetrics: Equatable {
     var knobSize: CGFloat { (26 * scale).rounded() }
     var trackWidth: CGFloat { (8 * scale).rounded() }
     var handleHeight: CGFloat { (64 * scale).rounded() }
-    var progressHeight: CGFloat { (150 * scale).rounded() }
-    var volumeHeight: CGFloat { (88 * scale).rounded() }
-    /// Fixed height of the quick input list on AI pages: three buttons.
-    var quickInputHeight: CGFloat { buttonSize * 3 + spacing * 2 }
+    var progressHeight: CGFloat { (110 * scale).rounded() }
+    var volumeHeight: CGFloat { (72 * scale).rounded() }
+    /// Fixed height of the quick input list on AI pages: two buttons, scrolling.
+    var quickInputHeight: CGFloat { buttonSize * 2 + spacing }
     /// Fixed height of scrolling lists (emoji, quick actions, spaces): seven buttons.
     var scrollPageHeight: CGFloat { buttonSize * 7 + spacing * 6 }
 

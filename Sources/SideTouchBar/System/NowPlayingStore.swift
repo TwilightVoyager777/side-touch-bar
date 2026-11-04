@@ -14,10 +14,14 @@ struct NowPlayingInfo: Equatable {
     var bundleID: String?
     /// Set when media plays through a helper process, e.g. Safari's WebKit.
     var parentBundleID: String?
+    /// MediaRemote modes: shuffle 1 off, 3 on; repeat 1 off, 2 one, 3 all.
+    var shuffleMode: Int?
+    var repeatMode: Int?
 
     static let sample = NowPlayingInfo(
         title: "示例标题，可能有两行", artist: nil, duration: 200, elapsed: 50, rate: 1,
-        timestamp: Date(), isPlaying: true, pid: nil, bundleID: nil, parentBundleID: nil
+        timestamp: Date(), isPlaying: true, pid: nil, bundleID: nil, parentBundleID: nil,
+        shuffleMode: nil, repeatMode: nil
     )
 
     func position(at date: Date) -> Double {
@@ -72,6 +76,9 @@ final class NowPlayingStore: ObservableObject {
 
     @Published private(set) var info: NowPlayingInfo?
     @Published private(set) var systemVolume: Float?
+    @Published private(set) var artwork: NSImage?
+
+    private var artworkKey: Int?
 
     private var process: Process?
     private var stdinPipe: Pipe?
@@ -175,8 +182,10 @@ final class NowPlayingStore: ObservableObject {
         guard let json = try? JSONSerialization.jsonObject(with: line) as? [String: Any] else { return }
         guard (json["active"] as? Bool) == true, let title = json["title"] as? String else {
             if info != nil { info = nil }
+            setArtwork(nil)
             return
         }
+        setArtwork(json["artwork"] as? String)
         let duration = (json["duration"] as? Double).flatMap { $0 > 0 ? $0 : nil }
         let newInfo = NowPlayingInfo(
             title: title,
@@ -188,7 +197,9 @@ final class NowPlayingStore: ObservableObject {
             isPlaying: json["playing"] as? Bool ?? false,
             pid: (json["pid"] as? Int).map { pid_t($0) },
             bundleID: json["bundle"] as? String,
-            parentBundleID: json["parentBundle"] as? String
+            parentBundleID: json["parentBundle"] as? String,
+            shuffleMode: json["shuffle"] as? Int,
+            repeatMode: json["repeat"] as? Int
         )
         if newInfo != info { info = newInfo }
     }
@@ -222,13 +233,48 @@ final class NowPlayingStore: ObservableObject {
         seek(to: info.position(at: Date()) + delta)
     }
 
+    func setRate(_ rate: Double) {
+        send(19, options: ["kMRMediaRemoteOptionPlaybackRate": rate])
+        guard var current = info else { return }
+        current.elapsed = current.position(at: Date())
+        current.timestamp = Date()
+        current.rate = rate
+        info = current
+    }
+
+    func toggleShuffle() {
+        let isOn = (info?.shuffleMode ?? 1) != 1
+        send(26, options: ["kMRMediaRemoteOptionShuffleMode": isOn ? 1 : 3])
+        info?.shuffleMode = isOn ? 1 : 3
+    }
+
+    /// Off → all → one → off, like the Music app.
+    func cycleRepeat() {
+        let next = switch info?.repeatMode ?? 1 {
+        case 1: 3
+        case 3: 2
+        default: 1
+        }
+        send(25, options: ["kMRMediaRemoteOptionRepeatMode": next])
+        info?.repeatMode = next
+    }
+
+    func like() { send(21) }
+
     func setVolume(_ value: Float) {
         Volume.set(value)
         systemVolume = value
     }
 
-    private func send(_ command: UInt32) {
-        _ = Self.sendCommandFunction?(command, nil)
+    private func send(_ command: UInt32, options: [String: Any]? = nil) {
+        _ = Self.sendCommandFunction?(command, options as CFDictionary?)
+    }
+
+    private func setArtwork(_ base64: String?) {
+        let key = base64.map { $0.count ^ $0.prefix(64).hashValue ^ $0.suffix(64).hashValue }
+        guard key != artworkKey else { return }
+        artworkKey = key
+        artwork = base64.flatMap { Data(base64Encoded: $0) }.flatMap(NSImage.init(data:))
     }
 
     private func startVolumePolling() {

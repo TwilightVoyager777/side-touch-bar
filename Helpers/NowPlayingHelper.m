@@ -74,6 +74,12 @@ static void emit(void) {
             NSDate *timestamp = info[@"kMRMediaRemoteNowPlayingInfoTimestamp"];
             if ([timestamp isKindOfClass:[NSDate class]]) out[@"timestamp"] = @(timestamp.timeIntervalSince1970);
             out[@"playing"] = @(playing);
+            put(out, @"shuffle", info[@"kMRMediaRemoteNowPlayingInfoShuffleMode"]);
+            put(out, @"repeat", info[@"kMRMediaRemoteNowPlayingInfoRepeatMode"]);
+            NSData *artwork = info[@"kMRMediaRemoteNowPlayingInfoArtworkData"];
+            if ([artwork isKindOfClass:[NSData class]] && artwork.length < 2 * 1024 * 1024) {
+                out[@"artwork"] = [artwork base64EncodedStringWithOptions:0];
+            }
             if (pid > 0) out[@"pid"] = @(pid);
             put(out, @"bundle", bundle);
             put(out, @"parentBundle", parentBundle);

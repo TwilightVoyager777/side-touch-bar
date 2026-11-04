@@ -1,3 +1,4 @@
+import Carbon.HIToolbox
 import SwiftUI
 
 /// When the app controls turn into playback controls, like the Touch Bar did
@@ -20,17 +21,31 @@ enum NowPlayingPresentation {
 }
 
 /// Playback controls in one style for every app: title, a scrubber with
-/// elapsed/remaining time, transport buttons and system volume.
+/// elapsed/remaining time, transport buttons and system volume, plus a
+/// "more" page and an audio output page.
 struct NowPlayingPanel: View {
     @ObservedObject var state: BarState
     let info: NowPlayingInfo
     @ObservedObject private var store = NowPlayingStore.shared
+    @ObservedObject private var settings = Settings.shared
     @Environment(\.barMetrics) private var metrics
 
     var body: some View {
+        Group {
+            switch state.nowPlayingPage {
+            case .main: main
+            case .more: NowPlayingMorePanel(state: state, info: info)
+            case .outputs: AudioOutputsPanel(state: state)
+            }
+        }
+        .transition(.blurReplace)
+        .animation(BarAnimation.morph, value: state.nowPlayingPage)
+    }
+
+    private var main: some View {
         VStack(spacing: metrics.spacing) {
             BarButton(
-                icon: .symbol(state.nowPlayingOverride == true ? "xmark" : "square.grid.2x2"),
+                icon: store.artwork.map(BarIcon.image) ?? .symbol(state.nowPlayingOverride == true ? "xmark" : "square.grid.2x2"),
                 help: state.nowPlayingOverride == true ? "关闭" : "显示应用按钮"
             ) {
                 withAnimation(BarAnimation.morph) { state.nowPlayingOverride = false }
@@ -49,6 +64,9 @@ struct NowPlayingPanel: View {
 
             BarDivider()
             transport
+            BarButton(icon: .symbol("ellipsis"), help: "更多：倍速、全屏、字幕…") {
+                state.handle(.mediaMore)
+            }
             BarDivider()
             volume
         }
@@ -80,12 +98,14 @@ struct NowPlayingPanel: View {
         }
     }
 
+    private var skipSeconds: Int { Int(settings.mediaSkipSeconds) }
+
     @ViewBuilder
     private var transport: some View {
         if info.isMusic {
             BarButton(icon: .symbol("backward.fill"), help: "上一首") { store.previousTrack() }
         } else {
-            BarButton(icon: .symbol("gobackward.15"), help: "后退 15 秒") { store.skip(by: -15) }
+            BarButton(icon: .symbol("gobackward.\(skipSeconds)"), help: "后退 \(skipSeconds) 秒") { store.skip(by: -Double(skipSeconds)) }
         }
         BarButton(icon: .symbol(info.isPlaying ? "pause.fill" : "play.fill"), help: info.isPlaying ? "暂停" : "播放") {
             store.togglePlayPause()
@@ -93,7 +113,7 @@ struct NowPlayingPanel: View {
         if info.isMusic {
             BarButton(icon: .symbol("forward.fill"), help: "下一首") { store.nextTrack() }
         } else {
-            BarButton(icon: .symbol("goforward.15"), help: "前进 15 秒") { store.skip(by: 15) }
+            BarButton(icon: .symbol("goforward.\(skipSeconds)"), help: "前进 \(skipSeconds) 秒") { store.skip(by: Double(skipSeconds)) }
         }
     }
 
@@ -108,10 +128,17 @@ struct NowPlayingPanel: View {
             ) { editing in
                 state.isInteracting = editing
             }
-            Image(systemName: "speaker.wave.2.fill")
-                .font(.system(size: metrics.captionSize, weight: .medium))
-                .foregroundStyle(.secondary)
-                .frame(height: metrics.captionSize * 1.6)
+            Button {
+                state.handle(.audioOutputs)
+            } label: {
+                Image(systemName: "airplayaudio")
+                    .font(.system(size: metrics.captionSize * 1.2, weight: .medium))
+                    .foregroundStyle(.secondary)
+                    .frame(width: metrics.buttonSize, height: metrics.captionSize * 2.2)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .help("切换音频输出")
         }
     }
 
@@ -132,5 +159,113 @@ struct NowPlayingPanel: View {
         return hours > 0
             ? String(format: "%d:%02d:%02d", hours, minutes, secs)
             : String(format: "%d:%02d", minutes, secs)
+    }
+}
+
+/// Speed, picture options and shuffle/repeat for the current media.
+struct NowPlayingMorePanel: View {
+    @ObservedObject var state: BarState
+    let info: NowPlayingInfo
+    @ObservedObject private var store = NowPlayingStore.shared
+    @Environment(\.barMetrics) private var metrics
+
+    private static let rates: [Double] = [0.5, 1, 1.25, 1.5, 2]
+
+    var body: some View {
+        VStack(spacing: metrics.spacing) {
+            BarButton(icon: .symbol("chevron.left"), help: "返回") { state.nowPlayingPage = .main }
+            BarDivider()
+            ForEach(Self.rates, id: \.self) { rate in
+                TextButton(title: Self.label(rate), help: "\(Self.label(rate)) 倍速", tint: abs(info.rate - rate) < 0.01 && info.isPlaying ? .accentColor : nil) {
+                    store.setRate(rate)
+                }
+            }
+            BarDivider()
+            if info.isMusic {
+                BarButton(icon: .symbol("shuffle"), help: "随机播放", tint: (info.shuffleMode ?? 1) != 1 ? .accentColor : nil) {
+                    store.toggleShuffle()
+                }
+                BarButton(icon: .symbol(info.repeatMode == 2 ? "repeat.1" : "repeat"), help: "循环", tint: (info.repeatMode ?? 1) != 1 ? .accentColor : nil) {
+                    store.cycleRepeat()
+                }
+                BarButton(icon: .symbol("heart"), help: "喜欢") { store.like() }
+            } else {
+                BarButton(icon: .symbol("arrow.up.left.and.arrow.down.right"), help: "全屏") { MediaActions.fullScreen(for: info) }
+                BarButton(icon: .symbol("pip.enter"), help: "画中画") { MediaActions.pictureInPicture(for: info) }
+                BarButton(icon: .symbol("captions.bubble"), help: "字幕") { MediaActions.subtitles(for: info) }
+            }
+            BarDivider()
+            BarButton(icon: .symbol("airplayaudio"), help: "切换音频输出") { state.handle(.audioOutputs) }
+        }
+    }
+
+    private static func label(_ rate: Double) -> String {
+        rate == rate.rounded() ? "\(Int(rate))×" : "\(rate)×"
+    }
+}
+
+/// Pick the audio output: speakers, headphones, AirPods, displays, AirPlay.
+struct AudioOutputsPanel: View {
+    @ObservedObject var state: BarState
+    @ObservedObject private var outputs = AudioOutputsStore.shared
+    @Environment(\.barMetrics) private var metrics
+
+    var body: some View {
+        VStack(spacing: metrics.spacing) {
+            BarButton(icon: .symbol("chevron.left"), help: "返回") { state.nowPlayingPage = .main }
+            ScrollingColumn {
+                ForEach(outputs.devices) { device in
+                    TextButton(title: device.name, help: device.name, tint: device.isDefault ? .accentColor : nil) {
+                        outputs.select(device)
+                    }
+                }
+            }
+        }
+        .onAppear { outputs.refresh() }
+    }
+}
+
+/// Picture and subtitle actions, sent to the playing app: browsers get the
+/// common web player keys, native players get their menu items.
+@MainActor
+enum MediaActions {
+    private static func perform(for info: NowPlayingInfo, _ action: @escaping @MainActor (_ isBrowser: Bool) -> Void) {
+        let app = info.app
+        let isBrowser = AppPresets.browser.bundleIDs.contains(app?.bundleIdentifier ?? "")
+        if let app, FrontmostAppMonitor.shared.app?.processIdentifier != app.processIdentifier {
+            app.activate()
+            Task { @MainActor in
+                try? await Task.sleep(for: .milliseconds(300))
+                action(isBrowser)
+            }
+        } else {
+            action(isBrowser)
+        }
+    }
+
+    static func fullScreen(for info: NowPlayingInfo) {
+        perform(for: info) { isBrowser in
+            if isBrowser {
+                ActionRunner.run(.keys(KeyCombo(kVK_ANSI_F)))
+            } else {
+                ActionRunner.run(.menuSearch(["Enter Full Screen", "Exit Full Screen", "Toggle Full Screen", "进入全屏", "退出全屏"], fallback: KeyCombo(kVK_ANSI_F, [.maskCommand, .maskControl])))
+            }
+        }
+    }
+
+    static func pictureInPicture(for info: NowPlayingInfo) {
+        perform(for: info) { _ in
+            ActionRunner.run(.menuSearch(["Picture in Picture", "画中画"], fallback: nil))
+        }
+    }
+
+    static func subtitles(for info: NowPlayingInfo) {
+        perform(for: info) { isBrowser in
+            if isBrowser {
+                ActionRunner.run(.keys(KeyCombo(kVK_ANSI_C)))
+            } else {
+                ActionRunner.run(.menuSearch(["Show Subtitles", "Hide Subtitles", "Subtitles", "显示字幕", "隐藏字幕", "字幕"], fallback: nil))
+            }
+        }
     }
 }
