@@ -64,10 +64,10 @@ struct AgentStatusBadge: View {
     }
 
     private var helpText: String {
-        guard let session else { return "安装状态提醒后，这里会显示会话状态和上下文用量" }
-        var parts = ["\(session.agent.title)：\(session.status.title)"]
+        guard let session else { return tr("安装状态提醒后，这里会显示会话状态和上下文用量") }
+        var parts = [tr("%@：%@", session.agent.title, session.status.title)]
         if let model = session.model { parts.append(model) }
-        if let percent = session.contextPercent { parts.append("上下文 \(Int(percent))%") }
+        if let percent = session.contextPercent { parts.append(tr("上下文 %d%%", Int(percent))) }
         if let cost = session.cost { parts.append(String(format: "$%.2f", cost)) }
         return parts.joined(separator: " · ")
     }
@@ -123,7 +123,7 @@ struct VoiceButton: View {
                         voice.end()
                     }
             )
-            .help(voice.errorMessage ?? "按住说话，松开后输入")
+            .help(tr(voice.errorMessage ?? "按住说话，松开后输入"))
     }
 }
 
@@ -180,7 +180,7 @@ struct AgentAttentionPanel: View {
 
     var body: some View {
         VStack(spacing: metrics.spacing) {
-            Text("等你确认")
+            Text(tr("等你确认"))
                 .font(.system(size: metrics.captionSize * 0.9, weight: .semibold))
                 .foregroundStyle(.orange)
             Text(session.title)
@@ -237,7 +237,7 @@ struct AgentSessionsPanel: View {
             }
             ScrollingColumn {
                 if sessions.isEmpty {
-                    Text("没有 AI 会话")
+                    Text(tr("没有 AI 会话"))
                         .font(.system(size: metrics.captionSize))
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
@@ -256,7 +256,7 @@ struct AgentSessionsPanel: View {
                             .contentShape(Circle())
                     }
                     .buttonStyle(GlassBarButtonStyle())
-                    .help("\(session.title)（\(session.agent.title)）：\(session.status.title)")
+                    .help(tr("%@（%@）：%@", session.title, session.agent.title, session.status.title))
                 }
             }
         }

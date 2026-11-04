@@ -35,22 +35,22 @@ final class ButtonEditorModel: ObservableObject {
         guard let bundleID,
               let app = NSRunningApplication.runningApplications(withBundleIdentifier: bundleID).first else {
             menuEntries = []
-            message = "要读取菜单，请先打开这个应用。"
+            message = tr("要读取菜单，请先打开这个应用。")
             return
         }
         guard Permissions.shared.requestIfNeeded() else {
-            message = "需要辅助功能权限才能读取菜单。"
+            message = tr("需要辅助功能权限才能读取菜单。")
             return
         }
         menuEntries = MenuInvoker.entries(of: app)
-        message = menuEntries.isEmpty ? "没有读到菜单。" : nil
+        message = menuEntries.isEmpty ? tr("没有读到菜单。") : nil
     }
 
     func add(_ button: CustomButton) {
         guard let bundleID else { return }
         var set = Settings.shared.customButtons[bundleID] ?? CustomButtonSet()
         guard set.buttons.count < PresetResolver.maxCustomButtons else {
-            message = "每个应用最多 \(PresetResolver.maxCustomButtons) 个自定义按钮。"
+            message = tr("每个应用最多 %d 个自定义按钮。", PresetResolver.maxCustomButtons)
             return
         }
         set.buttons.append(button)
@@ -90,7 +90,7 @@ final class ButtonEditorModel: ObservableObject {
         if flags.contains(.shift) { text += "⇧" }
         if flags.contains(.command) { text += "⌘" }
         let special: [Int: String] = [
-            kVK_Return: "↩", kVK_Tab: "⇥", kVK_Space: "空格", kVK_Delete: "⌫", kVK_Escape: "esc",
+            kVK_Return: "↩", kVK_Tab: "⇥", kVK_Space: tr("空格"), kVK_Delete: "⌫", kVK_Escape: "esc",
             kVK_LeftArrow: "←", kVK_RightArrow: "→", kVK_UpArrow: "↑", kVK_DownArrow: "↓",
             kVK_F1: "F1", kVK_F2: "F2", kVK_F3: "F3", kVK_F4: "F4", kVK_F5: "F5", kVK_F6: "F6",
             kVK_F7: "F7", kVK_F8: "F8", kVK_F9: "F9", kVK_F10: "F10", kVK_F11: "F11", kVK_F12: "F12",
@@ -107,8 +107,8 @@ struct ButtonSettingsView: View {
     var body: some View {
         Form {
             Section {
-                Picker("应用", selection: $model.bundleID) {
-                    Text("选择应用").tag(String?.none)
+                Picker(tr("应用"), selection: $model.bundleID) {
+                    Text(tr("选择应用")).tag(String?.none)
                     ForEach(model.apps, id: \.self) { id in
                         Text(ButtonEditorModel.name(of: id)).tag(String?.some(id))
                     }
@@ -123,17 +123,17 @@ struct ButtonSettingsView: View {
                     customButtons(for: bundleID)
                 }
             } header: {
-                Text("自定义按钮")
+                Text(tr("自定义按钮"))
             } footer: {
-                Text("自定义按钮显示在这个应用按钮的“自定义”页；勾选“只显示自定义按钮”则替换内置按钮。点菜单项不受快捷键变化影响，推荐优先使用。")
+                Text(tr("自定义按钮显示在这个应用按钮的“自定义”页；勾选“只显示自定义按钮”则替换内置按钮。点菜单项不受快捷键变化影响，推荐优先使用。"))
                     .foregroundStyle(.secondary)
             }
 
             if model.bundleID != nil {
-                Section("从菜单添加") {
+                Section(tr("从菜单添加")) {
                     HStack {
-                        TextField("搜索菜单", text: $model.menuSearch)
-                        Button("读取菜单") { model.loadMenus() }
+                        TextField(tr("搜索菜单"), text: $model.menuSearch)
+                        Button(tr("读取菜单")) { model.loadMenus() }
                     }
                     if let message = model.message {
                         Text(message).foregroundStyle(.secondary)
@@ -160,17 +160,17 @@ struct ButtonSettingsView: View {
                     .frame(height: model.menuEntries.isEmpty ? 0 : 180)
                 }
 
-                Section("其他方式") {
+                Section(tr("其他方式")) {
                     HStack {
-                        Text(model.isRecording ? "请按下要录制的快捷键…" : "录制一个快捷键")
+                        Text(model.isRecording ? tr("请按下要录制的快捷键…") : tr("录制一个快捷键"))
                         Spacer()
-                        Button(model.isRecording ? "取消" : "录制") {
+                        Button(model.isRecording ? tr("取消") : tr("录制")) {
                             model.isRecording ? model.stopRecording() : model.startRecording()
                         }
                     }
                     HStack {
-                        TextField("输入一段文字", text: $model.newText)
-                        Button("添加") {
+                        TextField(tr("输入一段文字"), text: $model.newText)
+                        Button(tr("添加")) {
                             let text = model.newText.trimmingCharacters(in: .whitespaces)
                             guard !text.isEmpty else { return }
                             model.add(CustomButton(title: String(text.prefix(6)), symbol: "", kind: .text(text, submit: false)))
@@ -183,7 +183,7 @@ struct ButtonSettingsView: View {
             Section {
                 ForEach($settings.favoriteSites) { $site in
                     HStack(spacing: 8) {
-                        TextField("名称", text: $site.title)
+                        TextField(tr("名称"), text: $site.title)
                             .frame(width: 90)
                         TextField("https://", text: $site.url)
                         Button {
@@ -194,13 +194,13 @@ struct ButtonSettingsView: View {
                         .buttonStyle(.plain)
                     }
                 }
-                Button("添加网站") {
+                Button(tr("添加网站")) {
                     settings.favoriteSites.append(FavoriteSite(title: "", url: "https://"))
                 }
             } header: {
-                Text("常用网站")
+                Text(tr("常用网站"))
             } footer: {
-                Text("显示在浏览器按钮的“网站”页，点一下在当前浏览器里打开。")
+                Text(tr("显示在浏览器按钮的“网站”页，点一下在当前浏览器里打开。"))
                     .foregroundStyle(.secondary)
             }
         }
@@ -216,7 +216,7 @@ struct ButtonSettingsView: View {
             settings.customButtons[bundleID] = $0.buttons.isEmpty && !$0.replacesBuiltIn ? nil : $0
         }
 
-        Toggle("只显示自定义按钮", isOn: binding.replacesBuiltIn)
+        Toggle(tr("只显示自定义按钮"), isOn: binding.replacesBuiltIn)
 
         ForEach(Array(binding.wrappedValue.buttons.enumerated()), id: \.element.id) { index, button in
             HStack(spacing: 8) {
@@ -228,8 +228,8 @@ struct ButtonSettingsView: View {
                     }
                 }
                 .frame(width: 24)
-                TextField("名称", text: binding.buttons[index].title)
-                TextField("图标（SF Symbol）", text: binding.buttons[index].symbol)
+                TextField(tr("名称"), text: binding.buttons[index].title)
+                TextField(tr("图标（SF Symbol）"), text: binding.buttons[index].symbol)
                     .frame(width: 130)
                 Text(kindDescription(button.kind))
                     .font(.caption)
@@ -250,9 +250,9 @@ struct ButtonSettingsView: View {
 
     private func kindDescription(_ kind: CustomButton.Kind) -> String {
         switch kind {
-        case .menu(let path): "菜单 " + path.joined(separator: "›")
-        case .keys: "快捷键"
-        case .text(let text, _): "文字 " + text
+        case .menu(let path): tr("菜单 ") + path.joined(separator: "›")
+        case .keys: tr("快捷键")
+        case .text(let text, _): tr("文字 ") + text
         }
     }
 }
@@ -263,14 +263,14 @@ struct MediaSettingsView: View {
     var body: some View {
         Form {
             Section {
-                Picker("视频快进 / 快退", selection: $settings.mediaSkipSeconds) {
-                    ForEach(Settings.mediaSkipOptions, id: \.self) { Text("\(Int($0)) 秒").tag($0) }
+                Picker(tr("视频快进 / 快退"), selection: $settings.mediaSkipSeconds) {
+                    ForEach(Settings.mediaSkipOptions, id: \.self) { Text(tr("%d 秒", Int($0))).tag($0) }
                 }
                 .pickerStyle(.segmented)
             } header: {
-                Text("播放控件")
+                Text(tr("播放控件"))
             } footer: {
-                Text("播放视频或音乐时，应用控件会换成统一的播放控件。点“更多”可以调倍速、全屏、画中画、字幕、随机和循环；点扬声器图标可以切换音频输出。")
+                Text(tr("播放视频或音乐时，应用控件会换成统一的播放控件。点“更多”可以调倍速、全屏、画中画、字幕、随机和循环；点扬声器图标可以切换音频输出。"))
                     .foregroundStyle(.secondary)
             }
         }

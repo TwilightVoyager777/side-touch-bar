@@ -8,8 +8,8 @@ enum AISendTarget: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .automatic: "最近使用的 AI"
-        case .terminalAgent: "终端里的 AI 会话"
+        case .automatic: tr("最近使用的 AI")
+        case .terminalAgent: tr("终端里的 AI 会话")
         case .claudeDesktop: "Claude"
         case .opencodeDesktop: "OpenCode"
         case .chatgpt: "ChatGPT"
@@ -24,8 +24,8 @@ enum VoiceLanguage: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .system: "跟随系统"
-        case .chinese: "中文"
+        case .system: tr("跟随系统")
+        case .chinese: tr("中文")
         case .english: "English"
         }
     }
@@ -46,18 +46,24 @@ struct AISnippet: Codable, Identifiable, Hashable {
     var text: String
     var submit: Bool
 
-    static let defaults: [AISnippet] = [
-        AISnippet(title: "继续", text: "继续", submit: true),
-        AISnippet(title: "解释改动", text: "解释一下刚才的改动", submit: true),
-        AISnippet(title: "写测试", text: "为刚才的改动补充测试", submit: true),
-        AISnippet(title: "检查改动", text: "检查一下这次的改动有没有问题", submit: true),
-        AISnippet(title: "中文回答", text: "请用中文回答", submit: true),
-        AISnippet(title: "/compact", text: "/compact", submit: true),
-        AISnippet(title: "/clear", text: "/clear", submit: true),
-        AISnippet(title: "/context", text: "/context", submit: true),
-        AISnippet(title: "/model", text: "/model", submit: true),
-        AISnippet(title: "/resume", text: "/resume", submit: true),
-    ]
+    /// Starter prompts in the interface language; afterwards they're the user's to edit.
+    static var defaults: [AISnippet] {
+        let english = L10n.isEnglish
+        return [
+            AISnippet(title: english ? "Continue" : "继续", text: english ? "Continue" : "继续", submit: true),
+            AISnippet(title: english ? "Explain" : "解释改动", text: english ? "Explain the changes you just made" : "解释一下刚才的改动", submit: true),
+            AISnippet(title: english ? "Add tests" : "写测试", text: english ? "Add tests for the changes you just made" : "为刚才的改动补充测试", submit: true),
+            AISnippet(title: english ? "Review" : "检查改动", text: english ? "Review these changes for problems" : "检查一下这次的改动有没有问题", submit: true),
+            english
+                ? AISnippet(title: "Be brief", text: "Keep answers short", submit: true)
+                : AISnippet(title: "中文回答", text: "请用中文回答", submit: true),
+            AISnippet(title: "/compact", text: "/compact", submit: true),
+            AISnippet(title: "/clear", text: "/clear", submit: true),
+            AISnippet(title: "/context", text: "/context", submit: true),
+            AISnippet(title: "/model", text: "/model", submit: true),
+            AISnippet(title: "/resume", text: "/resume", submit: true),
+        ]
+    }
 }
 
 /// A button the user added for an app, from its menus or a recorded shortcut.

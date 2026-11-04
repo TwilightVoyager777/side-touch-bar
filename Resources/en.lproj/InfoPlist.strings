@@ -1,0 +1,2 @@
+"NSMicrophoneUsageDescription" = "Records while you hold the microphone button on the bar and types what you said for AI tools.";
+"NSSpeechRecognitionUsageDescription" = "Turns what you say while holding the microphone button into text, on device when possible.";

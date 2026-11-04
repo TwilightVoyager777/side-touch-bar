@@ -182,25 +182,25 @@ enum ControlItem: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .brightness: "亮度"
-        case .volume: "音量"
-        case .keyboardBrightness: "键盘背光"
-        case .mute: "静音"
+        case .brightness: tr("亮度")
+        case .volume: tr("音量")
+        case .keyboardBrightness: tr("键盘背光")
+        case .mute: tr("静音")
         case .siri: "Siri"
-        case .playPause: "播放/暂停"
-        case .missionControl: "调度中心"
-        case .apps: "启动台"
-        case .screenshot: "截屏"
-        case .lockScreen: "锁定屏幕"
-        case .showDesktop: "显示桌面"
-        case .spotlight: "聚焦搜索"
-        case .nightShift: "夜览"
-        case .darkMode: "深色模式"
-        case .inputSource: "切换输入法"
-        case .emoji: "表情与符号"
-        case .shortcuts: "快捷指令"
-        case .screenSaver: "屏幕保护程序"
-        case .sleep: "睡眠"
+        case .playPause: tr("播放/暂停")
+        case .missionControl: tr("调度中心")
+        case .apps: tr("启动台")
+        case .screenshot: tr("截屏")
+        case .lockScreen: tr("锁定屏幕")
+        case .showDesktop: tr("显示桌面")
+        case .spotlight: tr("聚焦搜索")
+        case .nightShift: tr("夜览")
+        case .darkMode: tr("深色模式")
+        case .inputSource: tr("切换输入法")
+        case .emoji: tr("表情与符号")
+        case .shortcuts: tr("快捷指令")
+        case .screenSaver: tr("屏幕保护程序")
+        case .sleep: tr("睡眠")
         }
     }
 

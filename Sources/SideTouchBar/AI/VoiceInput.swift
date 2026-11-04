@@ -22,7 +22,7 @@ final class VoiceInput: ObservableObject {
         errorMessage = nil
         Task { @MainActor in
             guard await Self.authorize() else {
-                errorMessage = "需要麦克风和语音识别权限"
+                errorMessage = tr("需要麦克风和语音识别权限")
                 isListening = false
                 return
             }
@@ -53,7 +53,7 @@ final class VoiceInput: ObservableObject {
     private func startRecording() {
         let locale = Settings.shared.voiceLanguage.locale
         guard let recognizer = SFSpeechRecognizer(locale: locale) ?? SFSpeechRecognizer(), recognizer.isAvailable else {
-            errorMessage = "语音识别不可用"
+            errorMessage = tr("语音识别不可用")
             isListening = false
             return
         }
@@ -72,7 +72,7 @@ final class VoiceInput: ObservableObject {
         do {
             try engine.start()
         } catch {
-            errorMessage = "无法打开麦克风"
+            errorMessage = tr("无法打开麦克风")
             isListening = false
             input.removeTap(onBus: 0)
             return

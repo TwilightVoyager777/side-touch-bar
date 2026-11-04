@@ -1,0 +1,2 @@
+"NSMicrophoneUsageDescription" = "按住侧边栏上的麦克风按钮时，录音并转成文字输入给 AI。";
+"NSSpeechRecognitionUsageDescription" = "把你按住麦克风时说的话转成文字，优先在本机离线识别。";

@@ -138,7 +138,7 @@ struct NowPlayingPanel: View {
                     .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .help("切换音频输出")
+            .help(tr("切换音频输出"))
         }
     }
 
@@ -176,7 +176,7 @@ struct NowPlayingMorePanel: View {
             BarButton(icon: .symbol("chevron.left"), help: "返回") { state.nowPlayingPage = .main }
             BarDivider()
             ForEach(Self.rates, id: \.self) { rate in
-                TextButton(title: Self.label(rate), help: "\(Self.label(rate)) 倍速", tint: abs(info.rate - rate) < 0.01 && info.isPlaying ? .accentColor : nil) {
+                TextButton(title: Self.label(rate), help: tr("%@ 倍速", Self.label(rate)), tint: abs(info.rate - rate) < 0.01 && info.isPlaying ? .accentColor : nil) {
                     store.setRate(rate)
                 }
             }

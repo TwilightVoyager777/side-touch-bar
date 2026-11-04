@@ -3,7 +3,12 @@
 <plist version="1.0">
 <dict>
     <key>CFBundleDevelopmentRegion</key>
-    <string>zh_CN</string>
+    <string>en</string>
+    <key>CFBundleLocalizations</key>
+    <array>
+        <string>en</string>
+        <string>zh-Hans</string>
+    </array>
     <key>CFBundleExecutable</key>
     <string>SideTouchBar</string>
     <key>CFBundleIdentifier</key>
@@ -25,8 +30,8 @@
     <key>NSHighResolutionCapable</key>
     <true/>
     <key>NSMicrophoneUsageDescription</key>
-    <string>按住侧边栏上的麦克风按钮时，录音并转成文字输入给 AI。</string>
+    <string>Records while you hold the microphone button on the bar and types what you said for AI tools.</string>
     <key>NSSpeechRecognitionUsageDescription</key>
-    <string>把你按住麦克风时说的话转成文字，优先在本机离线识别。</string>
+    <string>Turns what you say while holding the microphone button into text, on device when possible.</string>
 </dict>
 </plist>

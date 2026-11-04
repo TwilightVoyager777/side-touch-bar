@@ -8,12 +8,12 @@ enum BarPage: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .appControlsWithStrip: "应用控件与控制条"
-        case .expandedStrip: "展开的控制条"
-        case .appControls: "应用控件"
-        case .functionKeys: "F1、F2 等键"
-        case .quickActions: "快速操作"
-        case .spaces: "空间"
+        case .appControlsWithStrip: tr("应用控件与控制条")
+        case .expandedStrip: tr("展开的控制条")
+        case .appControls: tr("应用控件")
+        case .functionKeys: tr("F1、F2 等键")
+        case .quickActions: tr("快速操作")
+        case .spaces: tr("空间")
         }
     }
 
@@ -28,9 +28,9 @@ enum DisplayTarget: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .main: "主显示器"
-        case .builtIn: "内建显示器"
-        case .followMouse: "跟随鼠标"
+        case .main: tr("主显示器")
+        case .builtIn: tr("内建显示器")
+        case .followMouse: tr("跟随鼠标")
         }
     }
 }
@@ -42,9 +42,9 @@ enum SizePreference: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .small: "小"
-        case .standard: "标准"
-        case .large: "大"
+        case .small: tr("小")
+        case .standard: tr("标准")
+        case .large: tr("大")
         }
     }
 
@@ -64,8 +64,8 @@ enum GlassStyle: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .regular: "常规"
-        case .clear: "清透"
+        case .regular: tr("常规")
+        case .clear: tr("清透")
         }
     }
 
@@ -84,9 +84,9 @@ enum AppearanceMode: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .system: "跟随系统"
-        case .light: "浅色"
-        case .dark: "深色"
+        case .system: tr("跟随系统")
+        case .light: tr("浅色")
+        case .dark: tr("深色")
         }
     }
 
@@ -245,6 +245,11 @@ final class Settings: ObservableObject {
         touchRepeat = defaults.object(forKey: Keys.touchRepeat) as? Bool ?? true
         touchEdgeSwipe = defaults.object(forKey: Keys.touchEdgeSwipe) as? Bool ?? true
         touchAutoTextPage = defaults.object(forKey: Keys.touchAutoTextPage) as? Bool ?? true
+        // Earlier versions were Chinese only: keep existing users in Chinese,
+        // new installs follow the system language.
+        if defaults.string(forKey: L10n.languageKey) == nil, defaults.bool(forKey: Keys.hasLaunched) {
+            defaults.set(AppLanguage.chinese.rawValue, forKey: L10n.languageKey)
+        }
         language = L10n.language
         aiEnabled = defaults.object(forKey: Keys.aiEnabled) as? Bool ?? true
         aiAutoReveal = defaults.object(forKey: Keys.aiAutoReveal) as? Bool ?? true

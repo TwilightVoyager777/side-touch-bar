@@ -14,7 +14,7 @@ struct BrowserTabsView: View {
             ScrollViewReader { proxy in
                 ScrollingColumn {
                     if store.tabs.isEmpty {
-                        Text("读取不到标签页")
+                        Text(tr("读取不到标签页"))
                             .font(.system(size: metrics.captionSize))
                             .foregroundStyle(.secondary)
                             .multilineTextAlignment(.center)
@@ -75,7 +75,7 @@ struct ScrollPadView: View {
                     state.scrollPadOffset = 0
                 }
         )
-        .help("上下拖动来滚动网页")
+        .help(tr("上下拖动来滚动网页"))
     }
 }
 
@@ -87,7 +87,7 @@ struct FavoriteSitesColumn: View {
     var body: some View {
         ScrollingColumn {
             if settings.favoriteSites.isEmpty {
-                Text("在设置的“按钮”里添加常用网站")
+                Text(tr("在设置的“按钮”里添加常用网站"))
                     .font(.system(size: metrics.captionSize))
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)

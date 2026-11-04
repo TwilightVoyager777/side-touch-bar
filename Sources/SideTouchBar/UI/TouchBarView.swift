@@ -134,7 +134,7 @@ struct PresetView: View {
         VStack(spacing: metrics.spacing) {
             if preset.pages.count > 1 {
                 let next = preset.pages[(pageIndex + 1) % preset.pages.count]
-                TextButton(title: page.title, help: "切换到：\(next.title)", tint: page.probe != nil ? .accentColor : nil) {
+                TextButton(title: page.title, help: tr("切换到：%@", tr(next.title)), tint: page.probe != nil ? .accentColor : nil) {
                     withAnimation(BarAnimation.morph) { state.presetPageIndex = (pageIndex + 1) % preset.pages.count }
                 }
             }
@@ -201,7 +201,7 @@ struct QuickActionsPage: View {
             BarDivider()
             ScrollingColumn {
                 if store.names.isEmpty {
-                    Text(store.isLoading ? "载入中" : "没有快捷指令")
+                    Text(store.isLoading ? tr("载入中") : tr("没有快捷指令"))
                         .font(.system(size: metrics.captionSize))
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
@@ -245,7 +245,7 @@ struct SpacesPage: View {
                 ForEach(Array(store.spaces.enumerated()), id: \.element.id) { index, space in
                     BarButton(
                         icon: space.isFullScreen ? .symbol("arrow.up.left.and.arrow.down.right") : .text("\(index + 1)"),
-                        help: space.isFullScreen ? "全屏应用" : "桌面 \(index + 1)",
+                        help: space.isFullScreen ? "全屏应用" : tr("桌面 %d", index + 1),
                         tint: space.id == store.currentID ? .accentColor : nil
                     ) {
                         store.switchTo(space)

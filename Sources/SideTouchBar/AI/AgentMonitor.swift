@@ -18,12 +18,12 @@ enum AgentStatus: String {
 
     var title: String {
         switch self {
-        case .idle: "空闲"
-        case .running: "运行中"
-        case .needsPermission: "等你确认"
-        case .needsInput: "等你输入"
-        case .done: "已完成"
-        case .failed: "出错了"
+        case .idle: tr("空闲")
+        case .running: tr("运行中")
+        case .needsPermission: tr("等你确认")
+        case .needsInput: tr("等你输入")
+        case .done: tr("已完成")
+        case .failed: tr("出错了")
         }
     }
 

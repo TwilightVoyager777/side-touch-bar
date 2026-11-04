@@ -13,7 +13,7 @@ final class SettingsWindowController {
                 backing: .buffered,
                 defer: false
             )
-            window.title = "Side Touch Bar 设置"
+            window.title = tr("Side Touch Bar 设置")
             window.titlebarAppearsTransparent = true
             window.isReleasedWhenClosed = false
             window.contentView = NSHostingView(rootView: SettingsView())

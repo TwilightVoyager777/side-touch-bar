@@ -179,10 +179,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     func menuNeedsUpdate(_ menu: NSMenu) {
         menu.removeAllItems()
 
-        menu.addItem(menuItem("设置…", action: #selector(openSettings), key: ","))
+        menu.addItem(menuItem(tr("设置…"), action: #selector(openSettings), key: ","))
         menu.addItem(.separator())
 
-        let header = NSMenuItem(title: "触控栏显示", action: nil, keyEquivalent: "")
+        let header = NSMenuItem(title: tr("触控栏显示"), action: nil, keyEquivalent: "")
         header.isEnabled = false
         menu.addItem(header)
         for page in BarPage.allCases {
@@ -194,18 +194,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
 
         menu.addItem(.separator())
-        let autoHide = menuItem("自动隐藏", action: #selector(toggleAutoHide))
+        let autoHide = menuItem(tr("自动隐藏"), action: #selector(toggleAutoHide))
         autoHide.state = settings.autoHide ? .on : .off
         menu.addItem(autoHide)
 
         Permissions.shared.refresh()
         if !Permissions.shared.isTrusted {
             menu.addItem(.separator())
-            menu.addItem(menuItem("授予辅助功能权限…", action: #selector(openAccessibility)))
+            menu.addItem(menuItem(tr("授予辅助功能权限…"), action: #selector(openAccessibility)))
         }
 
         menu.addItem(.separator())
-        menu.addItem(menuItem("退出 Side Touch Bar", action: #selector(quit), key: "q"))
+        menu.addItem(menuItem(tr("退出 Side Touch Bar"), action: #selector(quit), key: "q"))
     }
 
     private func menuItem(_ title: String, action: Selector, key: String = "") -> NSMenuItem {

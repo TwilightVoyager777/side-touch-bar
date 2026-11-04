@@ -18,6 +18,8 @@ struct BarRootView: View {
                 .opacity(state.isExpanded ? 0 : 1)
 
             BarBody(state: state)
+                // Rebuild every label when the interface language changes.
+                .id(settings.language)
                 .glassEffect(
                     settings.glassStyle.glass,
                     in: RoundedRectangle(cornerRadius: state.metrics.cornerRadius, style: .continuous)

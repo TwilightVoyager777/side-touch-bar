@@ -73,7 +73,7 @@ enum BarSizer {
         let key = [
             "\(screen.displayID ?? 0)", "\(screen.frame)", "\(screen.visibleFrame)",
             settings.sizePreference.rawValue, settings.compactItems.map(\.rawValue).joined(separator: ","),
-            "\(Permissions.shared.isTrusted)",
+            "\(Permissions.shared.isTrusted)", "\(L10n.isEnglish)",
         ].joined(separator: "|")
         if let cached = cache[key] { return cached }
 
@@ -120,7 +120,7 @@ enum BarSizer {
         }
 
         let sampleCustom = PresetResolver.customPage(
-            (0..<PresetResolver.maxCustomButtons).map { CustomButton(title: "按钮\($0)", symbol: "star", kind: .keys(KeyCombo(0))) }
+            (0..<PresetResolver.maxCustomButtons).map { CustomButton(title: "B\($0)", symbol: "star", kind: .keys(KeyCombo(0))) }
         )
         let presets = ([AppPresets.fallback] + AppPresets.all + AIPresets.desktopApps).map(PresetResolver.withTextPage)
             + AgentKind.allCases.map(AIPresets.terminalAgent)

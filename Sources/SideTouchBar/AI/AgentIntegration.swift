@@ -171,9 +171,9 @@ final class AgentIntegration: ObservableObject {
         var errorDescription: String? {
             switch self {
             case .codexNotifyInUse:
-                "~/.codex/config.toml 里已经有 notify 设置，为避免覆盖没有修改。"
+                tr("~/.codex/config.toml 里已经有 notify 设置，为避免覆盖没有修改。")
             case .unreadableSettings(let path):
-                "无法读取 \(path)，为避免损坏没有修改。"
+                tr("无法读取 %@，为避免损坏没有修改。", path)
             }
         }
     }
@@ -299,7 +299,7 @@ final class AgentIntegration: ObservableObject {
     else
       model=$(printf '%s' "$input" | /usr/bin/sed -n 's/.*"display_name"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | /usr/bin/head -n 1)
       pct=$(printf '%s' "$input" | /usr/bin/sed -n 's/.*"context_window"\(.*\)/\1/p' | /usr/bin/sed -n 's/^[^}]*"used_percentage"[[:space:]]*:[[:space:]]*\([0-9]*\).*/\1/p' | /usr/bin/head -n 1)
-      printf '%s%s\n' "${model:-Claude}" "${pct:+ · 上下文 $pct%}"
+      printf '%s%s\n' "${model:-Claude}" "${pct:+ · ctx $pct%}"
     fi
     """#
 

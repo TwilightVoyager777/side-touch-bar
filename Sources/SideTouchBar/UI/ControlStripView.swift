@@ -51,11 +51,11 @@ struct ControlStripView: View {
         BarDivider()
         switch contextButton {
         case .agents(let status):
-            BarButton(icon: .symbol("sparkles"), help: "AI 会话：\(status.title)", tint: status == .running ? nil : status.color) {
+            BarButton(icon: .symbol("sparkles"), help: tr("AI 会话：%@", status.title), tint: status == .running ? nil : status.color) {
                 withAnimation(BarAnimation.morph) { state.showSessions = true }
             }
         case .nowPlaying(let info):
-            BarButton(icon: info.app?.icon.map(BarIcon.image) ?? .symbol("play.circle.fill"), help: "正在播放：\(info.title)") {
+            BarButton(icon: info.app?.icon.map(BarIcon.image) ?? .symbol("play.circle.fill"), help: tr("正在播放：%@", info.title)) {
                 withAnimation(BarAnimation.morph) { state.nowPlayingOverride = true }
             }
         case nil:
