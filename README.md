@@ -1,6 +1,8 @@
 # Side Touch Bar
 
-把以前 MacBook Touch Bar 竖过来放到屏幕右侧，为将来的触屏 MacBook 准备。采用 macOS 26 的液态玻璃（Liquid Glass）风格。
+把以前 MacBook Touch Bar 竖过来放到屏幕右侧，为将来的触屏 MacBook 准备。采用 macOS 26 的液态玻璃（Liquid Glass）风格。界面支持中文和英文。
+
+> **English**: Side Touch Bar brings the MacBook Touch Bar back as a vertical Liquid Glass bar on the right edge of the screen, designed for touch screens: esc, app controls and the Control Strip, unified playback controls, AI coding helpers (approve agent prompts, voice input, status alerts), and per-app buttons. The interface is available in English and Chinese (Settings › Start › Language). Build with `scripts/build-app.sh`, test with `scripts/test.sh`.
 
 ## 功能
 
@@ -29,6 +31,14 @@
   - 专门的播放器（音乐、Spotify、QuickTime、IINA、VLC、TV、播客等）暂停时也会显示
   - 其他应用在后台播放时，控制条里会出现"正在播放"按钮（显示该应用的图标），点开是同样的播放控件
 - **自定义按钮**：在设置的"按钮"页给任意应用加按钮：从它的菜单里选、录一个快捷键，或者输入一段文字
+- **触屏**
+  - 危险操作要**长按 0.6 秒**才生效（锁屏、睡眠、删除、关闭标签页、Git 推送、"总是允许"…），按住时一圈进度环填满
+  - 音量、亮度、缩放、快进快退、撤销等**按住连续触发**，越按越快
+  - 控制条的亮度、音量、键盘背光：点一下打开滑条，**按住上下拖动直接调节**
+  - **文字编辑页**：在输入框里自动出现，有光标触控区（像 iPhone 按住空格键那样拖动光标）、选择/按词开关、全选、删除一个词、拷贝粘贴撤销
+  - 从屏幕边缘**往里滑**唤出，在栏上**往外滑**收起，点边缘的把手也能唤出
+- **中英文界面**：设置 › 开始 › 语言，切换后立即生效
+- **首次引导**：设置的"开始"页列出所有权限和用途、登录时启动、签名状态
 - **触控栏显示**（和原版系统设置一样）：应用控件与控制条 / 展开的控制条 / 应用控件 / F1、F2 等键 / 快速操作（你的快捷指令）/ 空间（各个桌面，点击切换）
 - **按住 fn（🌐）键**：临时切换到设置里选的模式（默认 F1–F12），松开恢复；侧边栏隐藏时会自动滑出
 - **总是显示 F1–F12 的应用**：在这些应用里默认显示 F 键，按住 fn 显示应用控件
@@ -59,7 +69,25 @@ scripts/build-app.sh          # 生成 build/SideTouchBar.app
 open build/SideTouchBar.app
 ```
 
-首次启动会打开设置窗口。之后可以从菜单栏图标进入"设置…"（⌘,）。
+首次启动会打开设置的"开始"页。之后可以从菜单栏图标进入"设置…"（⌘,）。
+
+### 固定签名（推荐）
+
+默认是临时签名，每次重新构建后系统可能要求重新授权。运行一次：
+
+```bash
+scripts/create-signing-identity.sh
+```
+
+它会在登录钥匙串里创建一个本机自签名证书"SideTouchBar Local Signing"，之后 `build-app.sh` 会自动用它签名，权限不再丢失。第一次用它签名时系统会询问是否允许 codesign 使用这个密钥，选"始终允许"。
+
+### 测试
+
+```bash
+scripts/test.sh
+```
+
+先检查英文翻译表（没有重复、没有遗漏），再运行测试：状态提醒的安装与移除（全部在临时文件夹里，不碰真实配置）、会话状态变化、AI 程序识别、数据模型、尺寸计算、翻译占位符。
 
 ## 权限
 
@@ -119,4 +147,7 @@ Helpers/     读取"正在播放"信息的小库（由 build-app.sh 编译进应
 - Codex 的按键（y / a）和状态提醒、OpenCode 终端里的确认按键（回车 / esc）没有实测。
 - 触控滚动区是用 ↑ / ↓ 方向键滚动网页的；光标在输入框里时会移动光标而不是滚动。
 - 截图发给 AI 用的是系统 `screencapture`，第一次使用时系统可能要求给 Side Touch Bar 屏幕录制权限。
+- 侧边栏收起时，菜单状态、输入框、终端里的 AI 检查和音量读取都会暂停，以省电。
+- 只用 Command Line Tools 时，SwiftPM 默认的构建系统偶尔加载不到测试用的宏插件，所以 `scripts/test.sh` 用原生构建系统并显式指定路径。
+- 界面文字以中文为源语言，英文翻译在 `Sources/SideTouchBar/App/L10n+English.swift`；新增界面文字后运行 `scripts/check-l10n.py` 检查是否漏翻。
 - 代码没有使用 SwiftUI 的 `@State`：Command Line Tools 缺少它所需的宏插件，视图状态都放在 `BarState` 等 `ObservableObject` 里。

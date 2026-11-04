@@ -37,8 +37,10 @@ struct ModelTests {
     }
 
     @Test func snippetsRoundTrip() throws {
-        let decoded = try JSONDecoder().decode([AISnippet].self, from: JSONEncoder().encode(AISnippet.defaults))
-        #expect(decoded == AISnippet.defaults)
+        // Defaults are generated per language with fresh IDs, so take them once.
+        let defaults = AISnippet.defaults
+        let decoded = try JSONDecoder().decode([AISnippet].self, from: JSONEncoder().encode(defaults))
+        #expect(decoded == defaults)
     }
 
     @Test func playbackPositionAdvancesWhilePlaying() {
