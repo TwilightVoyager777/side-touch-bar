@@ -18,6 +18,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         setupStatusItem()
         setupEventMonitors()
         NowPlayingStore.shared.start()
+        AgentMonitor.shared.start()
+        AIContextMonitor.shared.refresh()
+        _ = MenuStateMonitor.shared
+
+        AgentMonitor.shared.$revealToken
+            .dropFirst()
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in
+                guard Settings.shared.aiEnabled, Settings.shared.aiAutoReveal else { return }
+                self?.bar.revealForAttention()
+            }
+            .store(in: &cancellables)
+
+        FrontmostAppMonitor.shared.$app
+            .compactMap { $0 }
+            .receive(on: RunLoop.main)
+            .sink { AgentMonitor.shared.appActivated($0) }
+            .store(in: &cancellables)
 
         // objectWillChange fires before the new value is stored, so apply on the next run loop pass.
         settings.objectWillChange
@@ -52,6 +70,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     func applicationWillTerminate(_ notification: Notification) {
         NowPlayingStore.shared.stop()
+        AgentMonitor.shared.stop()
     }
 
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {

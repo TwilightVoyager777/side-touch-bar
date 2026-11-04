@@ -67,37 +67,87 @@ struct StandardPage: View {
     }
 }
 
-/// Buttons for the frontmost app, the emoji scrubber, or playback controls.
+/// Buttons for the frontmost app, or whatever needs the space more: the emoji
+/// scrubber, an agent waiting for permission, the session list, or playback controls.
 struct AppControlsView: View {
     @ObservedObject var state: BarState
     @ObservedObject private var frontmost = FrontmostAppMonitor.shared
     @ObservedObject private var nowPlaying = NowPlayingStore.shared
+    @ObservedObject private var aiContext = AIContextMonitor.shared
+    @ObservedObject private var agents = AgentMonitor.shared
+    @ObservedObject private var settings = Settings.shared
 
-    private var preset: AppPreset { state.presetOverride ?? frontmost.preset }
-
-    private var playbackInfo: NowPlayingInfo? {
-        NowPlayingPresentation.isShown(state: state, frontmost: frontmost.app)
-            ? NowPlayingPresentation.info(for: state)
-            : nil
-    }
+    private var content: AppControlsContent { AppControlsContent.resolve(state: state) }
 
     var body: some View {
+        let content = content
         Group {
-            if state.showEmojiPicker {
+            switch content {
+            case .emoji:
                 EmojiPickerView(state: state)
-            } else if let playbackInfo {
-                NowPlayingPanel(state: state, info: playbackInfo)
-            } else {
-                ItemGroupsView(groups: preset.groups, state: state)
+            case .attention(let session):
+                AgentAttentionPanel(state: state, session: session)
+            case .sessions:
+                AgentSessionsPanel(state: state)
+            case .nowPlaying(let info):
+                NowPlayingPanel(state: state, info: info)
+            case .preset(let preset):
+                PresetView(state: state, preset: preset)
                     .id(preset.id)
             }
         }
         .transition(.blurReplace)
-        .animation(BarAnimation.morph, value: preset.id)
-        .animation(BarAnimation.morph, value: state.showEmojiPicker)
-        .animation(BarAnimation.morph, value: playbackInfo == nil)
+        .animation(BarAnimation.morph, value: contentKey(content))
         .onChange(of: frontmost.app?.processIdentifier) {
             state.nowPlayingOverride = nil
+            state.nowPlayingPage = .main
+            state.presetPageIndex = 0
+        }
+    }
+
+    private func contentKey(_ content: AppControlsContent) -> String {
+        switch content {
+        case .emoji: "emoji"
+        case .attention(let session): "attention-\(session.id)"
+        case .sessions: "sessions"
+        case .nowPlaying: "nowPlaying"
+        case .preset(let preset): "preset-\(preset.id)"
+        }
+    }
+}
+
+/// A preset's current page; presets with several pages get a switcher on top.
+/// Pages that probe a menu item (e.g. the debugger) come forward on their own.
+struct PresetView: View {
+    @ObservedObject var state: BarState
+    let preset: AppPreset
+    @ObservedObject private var menuState = MenuStateMonitor.shared
+    @Environment(\.barMetrics) private var metrics
+
+    private var pageIndex: Int {
+        preset.pages.isEmpty ? 0 : state.presetPageIndex % preset.pages.count
+    }
+
+    var body: some View {
+        let page = preset.pages[pageIndex]
+        VStack(spacing: metrics.spacing) {
+            if preset.pages.count > 1 {
+                let next = preset.pages[(pageIndex + 1) % preset.pages.count]
+                TextButton(title: page.title, help: "切换到：\(next.title)", tint: page.probe != nil ? .accentColor : nil) {
+                    withAnimation(BarAnimation.morph) { state.presetPageIndex = (pageIndex + 1) % preset.pages.count }
+                }
+            }
+            ItemGroupsView(groups: page.groups, state: state)
+            PageExtrasView(extras: page.extras, state: state)
+        }
+        .id(page.id)
+        .transition(.blurReplace)
+        .onChange(of: menuState.activePageIDs) { old, new in
+            if let started = preset.pages.firstIndex(where: { new.contains($0.id) && !old.contains($0.id) }) {
+                withAnimation(BarAnimation.morph) { state.presetPageIndex = started }
+            } else if let id = preset.pages[pageIndex].probe.map({ _ in preset.pages[pageIndex].id }), !new.contains(id) {
+                withAnimation(BarAnimation.morph) { state.presetPageIndex = 0 }
+            }
         }
     }
 }

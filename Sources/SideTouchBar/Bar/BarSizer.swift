@@ -119,22 +119,50 @@ enum BarSizer {
             return state
         }
 
-        // Presets with the same group shape have the same height.
-        var seen = Set<[Int]>()
-        let presets = ([AppPresets.fallback] + AppPresets.all).filter { seen.insert($0.groups.map(\.count)).inserted }
+        let sampleCustom = PresetResolver.customPage(
+            (0..<PresetResolver.maxCustomButtons).map { CustomButton(title: "按钮\($0)", symbol: "star", kind: .keys(KeyCombo(0))) }
+        )
+        let presets = [AppPresets.fallback] + AppPresets.all + AIPresets.desktopApps
+            + AgentKind.allCases.map(AIPresets.terminalAgent)
+            + [AppPreset(id: "customSample", bundleIDs: [], pages: AppPresets.fallback.pages + [sampleCustom])]
 
-        // With something playing elsewhere, the control strip gains a Now Playing button.
-        return presets.map { preset in
+        // Pages with the same shape have the same height.
+        var seen = Set<String>()
+        var pages: [(AppPreset, Int)] = []
+        for preset in presets {
+            for (index, page) in preset.pages.enumerated() {
+                let shape = "\(page.groups.map(\.count))|\(page.extras.map { "\($0)" })|\(preset.pages.count > 1)"
+                if seen.insert(shape).inserted { pages.append((preset, index)) }
+            }
+        }
+
+        // The control strip has one contextual slot (agents or Now Playing); keep it filled.
+        return pages.map { preset, index in
             make(.appControlsWithStrip) {
                 $0.presetOverride = preset
-                $0.nowPlayingSample = .sample
-                $0.nowPlayingOverride = false
+                $0.presetPageIndex = index
+                $0.agentSessionSample = .sampleRunning
             }
         }
             + [
+                make(.appControlsWithStrip) { $0.agentSessionSample = .samplePermission },
+                make(.appControlsWithStrip) {
+                    $0.agentSessionSample = .sampleRunning
+                    $0.showSessions = true
+                },
                 make(.appControlsWithStrip) {
                     $0.nowPlayingSample = .sample
                     $0.nowPlayingOverride = true
+                },
+                make(.appControlsWithStrip) {
+                    $0.nowPlayingSample = .sample
+                    $0.nowPlayingOverride = true
+                    $0.nowPlayingPage = .more
+                },
+                make(.appControlsWithStrip) {
+                    $0.nowPlayingSample = .sample
+                    $0.nowPlayingOverride = true
+                    $0.nowPlayingPage = .outputs
                 },
                 make(.appControlsWithStrip) { $0.stripMode = .full },
                 make(.appControlsWithStrip) { $0.stripMode = .slider(.volume) },
@@ -145,4 +173,15 @@ enum BarSizer {
                 make(.spaces),
             ]
     }
+}
+
+extension AgentSession {
+    static let sampleRunning = AgentSession(
+        id: "sample", agent: .claude, status: .running, cwd: "/Users/me/示例项目", contextPercent: 42
+    )
+
+    static let samplePermission = AgentSession(
+        id: "sample", agent: .claude, status: .needsPermission, cwd: "/Users/me/示例项目",
+        detail: "npm run test -- --watch=false --coverage"
+    )
 }

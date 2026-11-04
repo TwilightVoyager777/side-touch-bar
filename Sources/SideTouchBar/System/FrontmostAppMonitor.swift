@@ -5,7 +5,6 @@ final class FrontmostAppMonitor: ObservableObject {
     static let shared = FrontmostAppMonitor()
 
     @Published private(set) var app: NSRunningApplication?
-    @Published private(set) var preset: AppPreset = AppPresets.fallback
 
     private init() {
         update(NSWorkspace.shared.frontmostApplication)
@@ -22,7 +21,5 @@ final class FrontmostAppMonitor: ObservableObject {
     private func update(_ app: NSRunningApplication?) {
         guard let app, app.processIdentifier != ProcessInfo.processInfo.processIdentifier else { return }
         self.app = app
-        let newPreset = AppPresets.preset(for: app.bundleIdentifier)
-        if newPreset.id != preset.id { preset = newPreset }
     }
 }

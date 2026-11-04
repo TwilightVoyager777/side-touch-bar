@@ -7,14 +7,14 @@ private let cmdOpt: CGEventFlags = [.maskCommand, .maskAlternate]
 private let cmdCtrl: CGEventFlags = [.maskCommand, .maskControl]
 private let ctrl: CGEventFlags = .maskControl
 
-private let emoji = BarItem(title: "表情", icon: .symbol("face.smiling"), action: .emojiPicker)
+private let emoji = BarItem.view("表情", "face.smiling", .emojiPicker)
 
 /// Buttons for the system control strip and for each supported app.
 /// Add an `AppPreset` to `all` to support another app.
 enum AppPresets {
     static func preset(for bundleID: String?) -> AppPreset {
         guard let bundleID else { return fallback }
-        return all.first { $0.bundleIDs.contains(bundleID) } ?? fallback
+        return (all + AIPresets.desktopApps).first { $0.bundleIDs.contains(bundleID) } ?? fallback
     }
 
     // MARK: - Control strip

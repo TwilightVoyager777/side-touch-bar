@@ -4,6 +4,10 @@ enum BarSide: String {
     case left, right
 }
 
+enum NowPlayingPage: Equatable {
+    case main, more, outputs
+}
+
 enum ControlStripMode: Equatable {
     case compact
     case full
@@ -34,10 +38,26 @@ final class BarState: ObservableObject {
     @Published var isScrubbing = false
     @Published var scrubValue: Double = 0
 
-    /// Forces a page / preset / Now Playing info instead of the live ones; used for measuring.
+    @Published var nowPlayingPage: NowPlayingPage = .main
+    @Published var presetPageIndex = 0
+    @Published var showSessions = false
+    /// A permission request the user chose to handle later.
+    @Published var dismissedAttentionKey: AttentionKey?
+
+    /// Forces a page / preset / sample data instead of the live ones; used for measuring.
     var pageOverride: BarPage?
     var presetOverride: AppPreset?
     var nowPlayingSample: NowPlayingInfo?
+    var agentSessionSample: AgentSession?
+
+    func handle(_ command: ViewCommand) {
+        switch command {
+        case .emojiPicker: showEmojiPicker = true
+        case .nextPresetPage: presetPageIndex += 1
+        case .mediaMore: nowPlayingPage = .more
+        case .audioOutputs: nowPlayingPage = .outputs
+        }
+    }
 
     init(side: BarSide) {
         self.side = side
@@ -59,6 +79,8 @@ final class BarState: ObservableObject {
         stripMode = .compact
         showEmojiPicker = false
         nowPlayingOverride = nil
+        nowPlayingPage = .main
+        showSessions = false
         isScrubbing = false
         isInteracting = false
     }

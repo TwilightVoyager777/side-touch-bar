@@ -153,6 +153,51 @@ final class Settings: ObservableObject {
         didSet { defaults.set(compactItems.map(\.rawValue), forKey: Keys.compactItems) }
     }
 
+    // MARK: AI coding
+
+    @Published var aiEnabled: Bool {
+        didSet { defaults.set(aiEnabled, forKey: Keys.aiEnabled) }
+    }
+
+    /// Slide the bar out when a coding agent needs a permission decision.
+    @Published var aiAutoReveal: Bool {
+        didSet { defaults.set(aiAutoReveal, forKey: Keys.aiAutoReveal) }
+    }
+
+    @Published var aiSoundOnDone: Bool {
+        didSet { defaults.set(aiSoundOnDone, forKey: Keys.aiSoundOnDone) }
+    }
+
+    @Published var aiSnippets: [AISnippet] {
+        didSet { saveJSON(aiSnippets, forKey: Keys.aiSnippets) }
+    }
+
+    @Published var aiSendTarget: AISendTarget {
+        didSet { defaults.set(aiSendTarget.rawValue, forKey: Keys.aiSendTarget) }
+    }
+
+    @Published var voiceLanguage: VoiceLanguage {
+        didSet { defaults.set(voiceLanguage.rawValue, forKey: Keys.voiceLanguage) }
+    }
+
+    // MARK: Custom buttons, browsers, media
+
+    /// Keyed by bundle ID.
+    @Published var customButtons: [String: CustomButtonSet] {
+        didSet { saveJSON(customButtons, forKey: Keys.customButtons) }
+    }
+
+    @Published var favoriteSites: [FavoriteSite] {
+        didSet { saveJSON(favoriteSites, forKey: Keys.favoriteSites) }
+    }
+
+    /// Seconds for the skip back/forward buttons of video playback controls.
+    @Published var mediaSkipSeconds: Double {
+        didSet { defaults.set(mediaSkipSeconds, forKey: Keys.mediaSkipSeconds) }
+    }
+
+    static let mediaSkipOptions: [Double] = [5, 10, 15, 30]
+
     var hasLaunchedBefore: Bool {
         get { defaults.bool(forKey: Keys.hasLaunched) }
         set { defaults.set(newValue, forKey: Keys.hasLaunched) }
@@ -170,6 +215,23 @@ final class Settings: ObservableObject {
         appearance = defaults.string(forKey: Keys.appearance).flatMap(AppearanceMode.init) ?? .system
         compactItems = (defaults.stringArray(forKey: Keys.compactItems)?.compactMap(ControlItem.init))
             ?? ControlItem.defaultCompact
+        aiEnabled = defaults.object(forKey: Keys.aiEnabled) as? Bool ?? true
+        aiAutoReveal = defaults.object(forKey: Keys.aiAutoReveal) as? Bool ?? true
+        aiSoundOnDone = defaults.object(forKey: Keys.aiSoundOnDone) as? Bool ?? false
+        aiSnippets = Self.loadJSON([AISnippet].self, from: defaults, forKey: Keys.aiSnippets) ?? AISnippet.defaults
+        aiSendTarget = defaults.string(forKey: Keys.aiSendTarget).flatMap(AISendTarget.init) ?? .automatic
+        voiceLanguage = defaults.string(forKey: Keys.voiceLanguage).flatMap(VoiceLanguage.init) ?? .system
+        customButtons = Self.loadJSON([String: CustomButtonSet].self, from: defaults, forKey: Keys.customButtons) ?? [:]
+        favoriteSites = Self.loadJSON([FavoriteSite].self, from: defaults, forKey: Keys.favoriteSites) ?? []
+        mediaSkipSeconds = defaults.object(forKey: Keys.mediaSkipSeconds) as? Double ?? 10
+    }
+
+    private func saveJSON<T: Encodable>(_ value: T, forKey key: String) {
+        if let data = try? JSONEncoder().encode(value) { defaults.set(data, forKey: key) }
+    }
+
+    private static func loadJSON<T: Decodable>(_ type: T.Type, from defaults: UserDefaults, forKey key: String) -> T? {
+        defaults.data(forKey: key).flatMap { try? JSONDecoder().decode(type, from: $0) }
     }
 
     private enum Keys {
@@ -184,5 +246,14 @@ final class Settings: ObservableObject {
         static let appearance = "appearance"
         static let compactItems = "compactItems"
         static let hasLaunched = "hasLaunched"
+        static let aiEnabled = "aiEnabled"
+        static let aiAutoReveal = "aiAutoReveal"
+        static let aiSoundOnDone = "aiSoundOnDone"
+        static let aiSnippets = "aiSnippets"
+        static let aiSendTarget = "aiSendTarget"
+        static let voiceLanguage = "voiceLanguage"
+        static let customButtons = "customButtons"
+        static let favoriteSites = "favoriteSites"
+        static let mediaSkipSeconds = "mediaSkipSeconds"
     }
 }
