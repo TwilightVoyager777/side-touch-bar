@@ -123,8 +123,19 @@ enum BarSizer {
         var seen = Set<[Int]>()
         let presets = ([AppPresets.fallback] + AppPresets.all).filter { seen.insert($0.groups.map(\.count)).inserted }
 
-        return presets.map { preset in make(.appControlsWithStrip) { $0.presetOverride = preset } }
+        // With something playing elsewhere, the control strip gains a Now Playing button.
+        return presets.map { preset in
+            make(.appControlsWithStrip) {
+                $0.presetOverride = preset
+                $0.nowPlayingSample = .sample
+                $0.nowPlayingOverride = false
+            }
+        }
             + [
+                make(.appControlsWithStrip) {
+                    $0.nowPlayingSample = .sample
+                    $0.nowPlayingOverride = true
+                },
                 make(.appControlsWithStrip) { $0.stripMode = .full },
                 make(.appControlsWithStrip) { $0.stripMode = .slider(.volume) },
                 make(.appControlsWithStrip) { $0.showEmojiPicker = true },

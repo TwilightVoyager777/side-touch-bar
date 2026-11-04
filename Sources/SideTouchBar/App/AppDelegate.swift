@@ -17,6 +17,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         bar.setEnabled(true)
         setupStatusItem()
         setupEventMonitors()
+        NowPlayingStore.shared.start()
 
         // objectWillChange fires before the new value is stored, so apply on the next run loop pass.
         settings.objectWillChange
@@ -47,6 +48,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             settingsWindow.show()
         }
         _ = Permissions.shared.requestIfNeeded()
+    }
+
+    func applicationWillTerminate(_ notification: Notification) {
+        NowPlayingStore.shared.stop()
     }
 
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {

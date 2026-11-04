@@ -34,6 +34,11 @@ struct BarIconView: View {
         case .text(let text):
             Text(text)
                 .font(.system(size: metrics.textSize, weight: .semibold, design: .rounded))
+        case .image(let image):
+            Image(nsImage: image)
+                .resizable()
+                .interpolation(.high)
+                .frame(width: metrics.symbolSize * 1.6, height: metrics.symbolSize * 1.6)
         }
     }
 }

@@ -29,9 +29,15 @@ final class BarState: ObservableObject {
     @Published var levelValue: Double = 0.5
     @Published var isLevelAvailable = true
 
-    /// Forces a page / preset instead of the settings and frontmost app; used for measuring.
+    /// nil: show playback controls automatically; true/false: the user opened or closed them.
+    @Published var nowPlayingOverride: Bool?
+    @Published var isScrubbing = false
+    @Published var scrubValue: Double = 0
+
+    /// Forces a page / preset / Now Playing info instead of the live ones; used for measuring.
     var pageOverride: BarPage?
     var presetOverride: AppPreset?
+    var nowPlayingSample: NowPlayingInfo?
 
     init(side: BarSide) {
         self.side = side
@@ -52,6 +58,8 @@ final class BarState: ObservableObject {
     func resetTransientState() {
         stripMode = .compact
         showEmojiPicker = false
+        nowPlayingOverride = nil
+        isScrubbing = false
         isInteracting = false
     }
 }

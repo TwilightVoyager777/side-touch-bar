@@ -5,7 +5,18 @@ import SwiftUI
 struct ControlStripView: View {
     @ObservedObject var state: BarState
     @ObservedObject private var settings = Settings.shared
+    @ObservedObject private var frontmost = FrontmostAppMonitor.shared
+    @ObservedObject private var nowPlaying = NowPlayingStore.shared
     @Environment(\.barMetrics) private var metrics
+
+    /// The Touch Bar's Now Playing button: something plays, but the app
+    /// controls aren't already showing its playback controls.
+    private var nowPlayingButtonInfo: NowPlayingInfo? {
+        guard let info = NowPlayingPresentation.info(for: state),
+              !NowPlayingPresentation.isShown(state: state, frontmost: frontmost.app)
+        else { return nil }
+        return info
+    }
 
     var body: some View {
         VStack(spacing: metrics.spacing) {
@@ -24,6 +35,11 @@ struct ControlStripView: View {
     private var compact: some View {
         BarButton(icon: .symbol("chevron.up"), help: "展开控制条") { set(.full) }
         BarDivider()
+        if let info = nowPlayingButtonInfo {
+            BarButton(icon: info.app?.icon.map(BarIcon.image) ?? .symbol("play.circle.fill"), help: "正在播放：\(info.title)") {
+                withAnimation(BarAnimation.morph) { state.nowPlayingOverride = true }
+            }
+        }
         ForEach(settings.compactItems) { item in
             BarButton(icon: .symbol(item.symbol), help: item.title) {
                 switch item.behavior {

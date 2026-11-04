@@ -67,17 +67,26 @@ struct StandardPage: View {
     }
 }
 
-/// Buttons for the frontmost app, or the emoji scrubber.
+/// Buttons for the frontmost app, the emoji scrubber, or playback controls.
 struct AppControlsView: View {
     @ObservedObject var state: BarState
     @ObservedObject private var frontmost = FrontmostAppMonitor.shared
+    @ObservedObject private var nowPlaying = NowPlayingStore.shared
 
     private var preset: AppPreset { state.presetOverride ?? frontmost.preset }
+
+    private var playbackInfo: NowPlayingInfo? {
+        NowPlayingPresentation.isShown(state: state, frontmost: frontmost.app)
+            ? NowPlayingPresentation.info(for: state)
+            : nil
+    }
 
     var body: some View {
         Group {
             if state.showEmojiPicker {
                 EmojiPickerView(state: state)
+            } else if let playbackInfo {
+                NowPlayingPanel(state: state, info: playbackInfo)
             } else {
                 ItemGroupsView(groups: preset.groups, state: state)
                     .id(preset.id)
@@ -86,6 +95,10 @@ struct AppControlsView: View {
         .transition(.blurReplace)
         .animation(BarAnimation.morph, value: preset.id)
         .animation(BarAnimation.morph, value: state.showEmojiPicker)
+        .animation(BarAnimation.morph, value: playbackInfo == nil)
+        .onChange(of: frontmost.app?.processIdentifier) {
+            state.nowPlayingOverride = nil
+        }
     }
 }
 

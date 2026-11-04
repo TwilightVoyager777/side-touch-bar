@@ -25,6 +25,8 @@ struct BarMetrics: Equatable {
     var knobSize: CGFloat { (26 * scale).rounded() }
     var trackWidth: CGFloat { (8 * scale).rounded() }
     var handleHeight: CGFloat { (64 * scale).rounded() }
+    var progressHeight: CGFloat { (150 * scale).rounded() }
+    var volumeHeight: CGFloat { (88 * scale).rounded() }
     /// Fixed height of scrolling lists (emoji, quick actions, spaces): seven buttons.
     var scrollPageHeight: CGFloat { buttonSize * 7 + spacing * 6 }
 

@@ -98,6 +98,8 @@ struct LevelSliderPanel: View {
 
 struct VerticalSlider: View {
     @Binding var value: Double
+    /// Defaults to the level slider height.
+    var height: CGFloat?
     var onEditingChanged: (Bool) -> Void = { _ in }
     var onChange: (Double) -> Void = { _ in }
 
@@ -135,6 +137,6 @@ struct VerticalSlider: View {
                     .onEnded { _ in onEditingChanged(false) }
             )
         }
-        .frame(width: metrics.buttonSize, height: metrics.sliderHeight)
+        .frame(width: metrics.buttonSize, height: height ?? metrics.sliderHeight)
     }
 }

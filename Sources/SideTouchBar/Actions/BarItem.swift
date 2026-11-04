@@ -1,8 +1,9 @@
-import Foundation
+import AppKit
 
 enum BarIcon: Hashable {
     case symbol(String)
     case text(String)
+    case image(NSImage)
 }
 
 enum SystemCommand {
