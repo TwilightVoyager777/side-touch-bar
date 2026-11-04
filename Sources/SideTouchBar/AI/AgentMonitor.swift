@@ -82,11 +82,11 @@ final class AgentMonitor: ObservableObject {
     /// Bumped when a session starts needing a permission decision.
     @Published private(set) var revealToken = 0
 
-    static let baseURL = FileManager.default.homeDirectoryForCurrentUser
+    nonisolated static let baseURL = FileManager.default.homeDirectoryForCurrentUser
         .appendingPathComponent("Library/Application Support/SideTouchBar", isDirectory: true)
-    static let inboxURL = baseURL.appendingPathComponent("agents/inbox", isDirectory: true)
-    static let statusURL = baseURL.appendingPathComponent("agents/status", isDirectory: true)
-    static let pidURL = baseURL.appendingPathComponent("app.pid")
+    nonisolated static let inboxURL = baseURL.appendingPathComponent("agents/inbox", isDirectory: true)
+    nonisolated static let statusURL = baseURL.appendingPathComponent("agents/status", isDirectory: true)
+    nonisolated static let pidURL = baseURL.appendingPathComponent("app.pid")
 
     private var sources: [DispatchSourceFileSystemObject] = []
     private var timer: Timer?
@@ -189,7 +189,7 @@ final class AgentMonitor: ObservableObject {
     private func apply(agent: AgentKind, event: String, payload: [String: Any], pids: [pid_t]) {
         let id = (payload["session_id"] as? String) ?? (payload["thread-id"] as? String) ?? "\(agent.rawValue)-\(pids.first ?? 0)"
 
-        if event == "SessionEnd" || event == "session.deleted" {
+        if AgentEventReducer.endsSession(event) {
             sessions.removeAll { $0.id == id }
             return
         }
@@ -202,53 +202,7 @@ final class AgentMonitor: ObservableObject {
             resolveProcesses(for: &session, pids: pids)
         }
 
-        switch (agent, event) {
-        case (.claude, "SessionStart"):
-            session.status = .idle
-        case (.claude, "UserPromptSubmit"), (.opencode, "session.execution.started"), (.opencode, "permission.replied"):
-            session.status = .running
-            session.pendingToolKey = nil
-            session.detail = nil
-        case (.claude, "PermissionRequest"):
-            session.status = .needsPermission
-            session.pendingToolKey = Self.toolKey(payload)
-            session.detail = Self.toolSummary(payload)
-        case (.claude, "PostToolUse"), (.claude, "PostToolUseFailure"):
-            // Parallel tool calls can finish while another waits for permission.
-            if session.status != .needsPermission || session.pendingToolKey == Self.toolKey(payload) {
-                session.status = .running
-                session.pendingToolKey = nil
-                session.detail = nil
-            }
-        case (.claude, "Notification"):
-            switch payload["notification_type"] as? String {
-            case "permission_prompt":
-                if session.status != .needsPermission {
-                    session.status = .needsPermission
-                    session.detail = payload["message"] as? String
-                }
-            case "agent_needs_input", "elicitation_dialog", "elicitation_url_dialog":
-                session.status = .needsInput
-                session.detail = payload["message"] as? String
-            default:
-                break
-            }
-        case (.claude, "Stop"), (.opencode, "session.execution.succeeded"), (.codex, "turn-complete"):
-            session.status = .done
-            session.pendingToolKey = nil
-            session.detail = (payload["last_assistant_message"] as? String ?? payload["last-assistant-message"] as? String)
-                .map { String($0.prefix(80)) }
-        case (.claude, "StopFailure"), (.opencode, "session.execution.failed"):
-            session.status = .failed
-        case (.opencode, "session.execution.interrupted"):
-            session.status = .idle
-        case (.opencode, "permission.asked"):
-            session.status = .needsPermission
-            let resources = (payload["resources"] as? [String])?.joined(separator: " ")
-            session.detail = (payload["message"] as? String) ?? [payload["action"] as? String, resources].compactMap { $0 }.joined(separator: " ")
-        default:
-            break
-        }
+        session = AgentEventReducer.apply(event: event, payload: payload, to: session)
 
         if session.status != previous {
             if session.status == .done || session.status == .failed {
@@ -350,15 +304,77 @@ final class AgentMonitor: ObservableObject {
         change(&session)
         store(session)
     }
+}
 
-    private static func toolKey(_ payload: [String: Any]) -> String {
+/// How agent events change a session's status. Pure, so it can be tested;
+/// AgentMonitor adds process lookup, sounds and revealing the bar.
+enum AgentEventReducer {
+    static func endsSession(_ event: String) -> Bool {
+        event == "SessionEnd" || event == "session.deleted"
+    }
+
+    static func apply(event: String, payload: [String: Any], to session: AgentSession) -> AgentSession {
+        var session = session
+        let agent = session.agent
+        switch (agent, event) {
+        case (.claude, "SessionStart"):
+            session.status = .idle
+        case (.claude, "UserPromptSubmit"), (.opencode, "session.execution.started"), (.opencode, "permission.replied"):
+            session.status = .running
+            session.pendingToolKey = nil
+            session.detail = nil
+        case (.claude, "PermissionRequest"):
+            session.status = .needsPermission
+            session.pendingToolKey = toolKey(payload)
+            session.detail = toolSummary(payload)
+        case (.claude, "PostToolUse"), (.claude, "PostToolUseFailure"):
+            // Parallel tool calls can finish while another waits for permission.
+            if session.status != .needsPermission || session.pendingToolKey == toolKey(payload) {
+                session.status = .running
+                session.pendingToolKey = nil
+                session.detail = nil
+            }
+        case (.claude, "Notification"):
+            switch payload["notification_type"] as? String {
+            case "permission_prompt":
+                if session.status != .needsPermission {
+                    session.status = .needsPermission
+                    session.detail = payload["message"] as? String
+                }
+            case "agent_needs_input", "elicitation_dialog", "elicitation_url_dialog":
+                session.status = .needsInput
+                session.detail = payload["message"] as? String
+            default:
+                break
+            }
+        case (.claude, "Stop"), (.opencode, "session.execution.succeeded"), (.codex, "turn-complete"):
+            session.status = .done
+            session.pendingToolKey = nil
+            session.detail = (payload["last_assistant_message"] as? String ?? payload["last-assistant-message"] as? String)
+                .map { String($0.prefix(80)) }
+        case (.claude, "StopFailure"), (.opencode, "session.execution.failed"):
+            session.status = .failed
+        case (.opencode, "session.execution.interrupted"):
+            session.status = .idle
+        case (.opencode, "permission.asked"):
+            session.status = .needsPermission
+            let resources = (payload["resources"] as? [String])?.joined(separator: " ")
+            session.detail = (payload["message"] as? String) ?? [payload["action"] as? String, resources].compactMap { $0 }.joined(separator: " ")
+        default:
+            break
+        }
+
+        return session
+    }
+
+    static func toolKey(_ payload: [String: Any]) -> String {
         let input = (payload["tool_input"]).flatMap {
             try? JSONSerialization.data(withJSONObject: $0, options: [.sortedKeys])
         }.map { String(decoding: $0, as: UTF8.self) } ?? ""
         return "\(payload["tool_name"] as? String ?? "")|\(input)"
     }
 
-    private static func toolSummary(_ payload: [String: Any]) -> String? {
+    static func toolSummary(_ payload: [String: Any]) -> String? {
         let tool = payload["tool_name"] as? String
         let input = payload["tool_input"] as? [String: Any] ?? [:]
         if let command = input["command"] as? String { return command }

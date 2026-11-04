@@ -21,12 +21,16 @@ final class AgentIntegration: ObservableObject {
     @Published private(set) var codexInstalled = false
 
     private let fileManager = FileManager.default
-    private let home = FileManager.default.homeDirectoryForCurrentUser
+    private let home: URL
+    /// The app's support directory: scripts, saved status line, event inbox.
+    private let supportURL: URL
 
-    private var binURL: URL { AgentMonitor.baseURL.appendingPathComponent("bin", isDirectory: true) }
+    private var binURL: URL { supportURL.appendingPathComponent("bin", isDirectory: true) }
+    private var inboxURL: URL { supportURL.appendingPathComponent("agents/inbox", isDirectory: true) }
+    private var statusURL: URL { supportURL.appendingPathComponent("agents/status", isDirectory: true) }
     var eventScriptURL: URL { binURL.appendingPathComponent("agent-event") }
     var statusScriptURL: URL { binURL.appendingPathComponent("agent-statusline") }
-    private var originalStatusLineURL: URL { AgentMonitor.baseURL.appendingPathComponent("statusline-original") }
+    private var originalStatusLineURL: URL { supportURL.appendingPathComponent("statusline-original") }
 
     var claudeSettingsURL: URL { home.appendingPathComponent(".claude/settings.json") }
     var openCodePluginURL: URL { home.appendingPathComponent(".config/opencode/plugins/sidetouchbar.js") }
@@ -44,7 +48,13 @@ final class AgentIntegration: ObservableObject {
         "Notification", "Stop", "StopFailure", "SessionEnd",
     ]
 
-    private init() {
+    /// Tests pass temporary directories; the app uses the real home and support folders.
+    init(
+        home: URL = FileManager.default.homeDirectoryForCurrentUser,
+        supportURL: URL = AgentMonitor.baseURL
+    ) {
+        self.home = home
+        self.supportURL = supportURL
         refresh()
     }
 
@@ -226,8 +236,8 @@ final class AgentIntegration: ObservableObject {
 
     private func writeScripts() throws {
         try fileManager.createDirectory(at: binURL, withIntermediateDirectories: true)
-        try fileManager.createDirectory(at: AgentMonitor.inboxURL, withIntermediateDirectories: true)
-        try fileManager.createDirectory(at: AgentMonitor.statusURL, withIntermediateDirectories: true)
+        try fileManager.createDirectory(at: inboxURL, withIntermediateDirectories: true)
+        try fileManager.createDirectory(at: statusURL, withIntermediateDirectories: true)
         for (url, script) in [(eventScriptURL, Self.eventScript), (statusScriptURL, Self.statusScript)] {
             try script.write(to: url, atomically: true, encoding: .utf8)
             try fileManager.setAttributes([.posixPermissions: 0o755], ofItemAtPath: url.path)
