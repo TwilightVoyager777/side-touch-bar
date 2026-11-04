@@ -7,7 +7,7 @@ private let cmdOpt: CGEventFlags = [.maskCommand, .maskAlternate]
 private let cmdCtrl: CGEventFlags = [.maskCommand, .maskControl]
 private let ctrl: CGEventFlags = .maskControl
 
-private let emoji = BarItem.system("表情与符号", "face.smiling", .emoji)
+private let emoji = BarItem(title: "表情", icon: .symbol("face.smiling"), action: .emojiPicker)
 
 /// Buttons for the system control strip and for each supported app.
 /// Add an `AppPreset` to `all` to support another app.
@@ -365,8 +365,47 @@ enum AppPresets {
         ]
     )
 
+    static let calculator = AppPreset(
+        id: "calculator",
+        bundleIDs: ["com.apple.calculator"],
+        groups: [
+            [
+                .text("全部清除", "AC", KeyCombo(kVK_Escape)),
+                .key("正负号", "plus.forwardslash.minus", KeyCombo(kVK_ANSI_Minus, .maskAlternate)),
+                .key("百分比", "percent", KeyCombo(kVK_ANSI_5, .maskShift)),
+            ],
+            [
+                .key("除", "divide", KeyCombo(kVK_ANSI_Slash)),
+                .key("乘", "multiply", KeyCombo(kVK_ANSI_8, .maskShift)),
+                .key("减", "minus", KeyCombo(kVK_ANSI_Minus)),
+                .key("加", "plus", KeyCombo(kVK_ANSI_Equal, .maskShift)),
+                .key("等于", "equal", KeyCombo(kVK_Return)),
+            ],
+        ]
+    )
+
+    static let photos = AppPreset(
+        id: "photos",
+        bundleIDs: ["com.apple.Photos"],
+        groups: [
+            [
+                .key("上一张", "chevron.up", KeyCombo(kVK_LeftArrow)),
+                .key("下一张", "chevron.down", KeyCombo(kVK_RightArrow)),
+            ],
+            [
+                .key("收藏", "heart.fill", KeyCombo(kVK_ANSI_Period)),
+                .key("向左旋转", "rotate.left", KeyCombo(kVK_ANSI_R, cmd)),
+                .key("编辑", "wand.and.stars", KeyCombo(kVK_Return)),
+            ],
+            [
+                .key("删除", "trash", KeyCombo(kVK_Delete, cmd)),
+            ],
+        ]
+    )
+
     static let all: [AppPreset] = [
         browser, finder, terminal, codeEditor, xcode, media,
         mail, calendar, preview, messages, notes, textEditing, keynote,
+        calculator, photos,
     ]
 }

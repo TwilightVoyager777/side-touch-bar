@@ -13,12 +13,14 @@ enum SystemCommand {
     case keyboardBrightnessUp, keyboardBrightnessDown
     case missionControl, apps, siri
     case screenshot, lockScreen, showDesktop, spotlight
-    case nightShift, darkMode, inputSource, emoji, shortcuts, sleep
+    case nightShift, darkMode, inputSource, emoji, shortcuts, sleep, screenSaver
 }
 
 enum BarAction {
     case keys(KeyCombo)
     case system(SystemCommand)
+    /// Turns the app controls into the Touch Bar emoji scrubber.
+    case emojiPicker
 }
 
 struct BarItem: Identifiable {
@@ -52,7 +54,7 @@ struct AppPreset {
 enum ControlItem: String, CaseIterable, Identifiable {
     case brightness, volume, keyboardBrightness, mute, siri, playPause
     case missionControl, apps, screenshot, lockScreen, showDesktop, spotlight
-    case nightShift, darkMode, inputSource, emoji, shortcuts, sleep
+    case nightShift, darkMode, inputSource, emoji, shortcuts, screenSaver, sleep
 
     static let defaultCompact: [ControlItem] = [.brightness, .volume, .mute, .siri]
 
@@ -82,6 +84,7 @@ enum ControlItem: String, CaseIterable, Identifiable {
         case .inputSource: "切换输入法"
         case .emoji: "表情与符号"
         case .shortcuts: "快捷指令"
+        case .screenSaver: "屏幕保护程序"
         case .sleep: "睡眠"
         }
     }
@@ -105,6 +108,7 @@ enum ControlItem: String, CaseIterable, Identifiable {
         case .inputSource: "globe"
         case .emoji: "face.smiling"
         case .shortcuts: "square.stack.3d.up.fill"
+        case .screenSaver: "sparkles.tv"
         case .sleep: "moon.zzz.fill"
         }
     }
@@ -128,6 +132,7 @@ enum ControlItem: String, CaseIterable, Identifiable {
         case .inputSource: .command(.inputSource)
         case .emoji: .command(.emoji)
         case .shortcuts: .command(.shortcuts)
+        case .screenSaver: .command(.screenSaver)
         case .sleep: .command(.sleep)
         }
     }

@@ -9,6 +9,9 @@ enum ActionRunner {
             sendKeys(combo)
         case .system(let command):
             run(command)
+        case .emojiPicker:
+            // Handled by the view, which owns the bar state.
+            break
         }
     }
 
@@ -52,6 +55,8 @@ enum ActionRunner {
             openApp(["/System/Applications/Utilities/Screenshot.app"])
         case .shortcuts:
             openApp(["/System/Applications/Shortcuts.app"])
+        case .screenSaver:
+            openApp(["/System/Library/CoreServices/ScreenSaverEngine.app"])
 
         case .lockScreen:
             sendKeys(KeyCombo(kVK_ANSI_Q, [.maskControl, .maskCommand]))
@@ -81,7 +86,7 @@ enum ActionRunner {
         return Permissions.shared.isTrusted
     }
 
-    private static func sendKeys(_ combo: KeyCombo) {
+    static func sendKeys(_ combo: KeyCombo) {
         guard Permissions.shared.requestIfNeeded() else { return }
         KeySender.send(combo)
     }
@@ -89,6 +94,12 @@ enum ActionRunner {
     private static func sendMedia(_ key: MediaKey) {
         guard Permissions.shared.requestIfNeeded() else { return }
         MediaKeySender.send(key)
+    }
+
+    /// Types text into the focused app, e.g. an emoji.
+    static func type(_ text: String) {
+        guard Permissions.shared.requestIfNeeded() else { return }
+        KeySender.type(text)
     }
 
     private static func openApp(_ candidates: [String]) {

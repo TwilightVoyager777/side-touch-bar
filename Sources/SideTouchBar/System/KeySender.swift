@@ -31,4 +31,20 @@ enum KeySender {
         down.post(tap: .cghidEventTap)
         up.post(tap: .cghidEventTap)
     }
+
+    /// Types arbitrary text (such as an emoji) into the focused app.
+    static func type(_ text: String) {
+        let units = Array(text.utf16)
+        let source = CGEventSource(stateID: .hidSystemState)
+        guard
+            let down = CGEvent(keyboardEventSource: source, virtualKey: 0, keyDown: true),
+            let up = CGEvent(keyboardEventSource: source, virtualKey: 0, keyDown: false)
+        else { return }
+        down.flags = []
+        up.flags = []
+        down.keyboardSetUnicodeString(stringLength: units.count, unicodeString: units)
+        up.keyboardSetUnicodeString(stringLength: units.count, unicodeString: units)
+        down.post(tap: .cghidEventTap)
+        up.post(tap: .cghidEventTap)
+    }
 }
