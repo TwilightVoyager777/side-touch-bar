@@ -4,7 +4,7 @@ import AppKit
 enum SizingReport {
     static func run() {
         NSApplication.shared.setActivationPolicy(.accessory)
-        // name, width pt, height pt, menu bar pt, glass width mm, dock at bottom pt
+        // name, width pt, height pt, menu bar pt, glass width mm
         let screens: [(String, CGFloat, CGFloat, CGFloat, CGFloat)] = [
             ("14in default 1512x982", 1512, 982, 38, 302.5),
             ("14in larger text 1352x878", 1352, 878, 38, 302.5),
@@ -16,20 +16,18 @@ enum SizingReport {
             ("27in 1440p @1x", 2560, 1440, 30, 602.0),
             ("27in 5K @2x 2560x1440", 2560, 1440, 30, 596.0),
         ]
-        for content in [BarContent.controlStrip, .appRegion, .combined] {
-            let tallest = BarSizer.tallestHeight(content: content, metrics: .standard)
-            print("tallest @1x", content, tallest)
-        }
+        print("tallest @1x", BarSizer.tallestHeight(metrics: .standard))
         for (name, width, height, menuBar, mm) in screens {
-            let preferred = BarSizer.physicalScale(pointsPerMillimeter: width / mm)
+            let pointsPerMillimeter = width / mm
+            let preferred = BarSizer.physicalScale(pointsPerMillimeter: pointsPerMillimeter)
             let available = height - menuBar - BarMetrics.shadowMargin * 2
-            var line = "\(name): pt/mm \(String(format: "%.2f", width / mm)) preferred \(String(format: "%.2f", preferred))"
-            for content in [BarContent.appRegion, .combined] {
-                let result = BarSizer.fit(preferredScale: preferred, availableHeight: available, content: content)
-                let h = BarSizer.tallestHeight(content: content, metrics: result.metrics)
-                line += " | \(content): btn \(Int(result.metrics.buttonSize))pt \(String(format: "%.1f", result.metrics.buttonSize / (width / mm)))mm tallest \(Int(h))/\(Int(available))\(result.isShrunkToFit ? " shrunk" : "")"
-            }
-            print(line)
+            let result = BarSizer.fit(preferredScale: preferred, availableHeight: available)
+            let tallest = BarSizer.tallestHeight(metrics: result.metrics)
+            let button = result.metrics.buttonSize
+            print(String(
+                format: "%@: button %.0fpt %.1fmm, tallest %.0f of %.0f%@",
+                name, button, button / pointsPerMillimeter, tallest, available, result.isShrunkToFit ? " (shrunk)" : ""
+            ))
         }
     }
 }

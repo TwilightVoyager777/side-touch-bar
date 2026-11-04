@@ -1,17 +1,24 @@
 import SwiftUI
 
-enum BarLayout: String, CaseIterable, Identifiable {
-    case left, both, right
+/// What the bar shows, matching the Touch Bar's "Touch Bar shows" options.
+enum BarPage: String, CaseIterable, Identifiable {
+    case appControlsWithStrip, expandedStrip, appControls, functionKeys, quickActions, spaces
 
     var id: String { rawValue }
 
     var title: String {
         switch self {
-        case .left: "仅左侧"
-        case .both: "左右两侧"
-        case .right: "仅右侧"
+        case .appControlsWithStrip: "应用控件与控制条"
+        case .expandedStrip: "展开的控制条"
+        case .appControls: "应用控件"
+        case .functionKeys: "F1、F2 等键"
+        case .quickActions: "快速操作"
+        case .spaces: "空间"
         }
     }
+
+    /// Choices for "Press and hold fn key to", as on the Touch Bar.
+    static let fnHoldChoices: [BarPage] = [.functionKeys, .expandedStrip, .appControls, .quickActions, .spaces]
 }
 
 enum DisplayTarget: String, CaseIterable, Identifiable {
@@ -101,15 +108,18 @@ final class Settings: ObservableObject {
 
     private let defaults = UserDefaults.standard
 
-    /// Which screen edges show a bar. With a single side, app buttons and the
-    /// control strip share one bar, like the original Touch Bar.
-    @Published var layout: BarLayout {
-        didSet { defaults.set(layout.rawValue, forKey: Keys.layout) }
+    @Published var barPage: BarPage {
+        didSet { defaults.set(barPage.rawValue, forKey: Keys.barPage) }
     }
 
-    /// In two-sided layout: the side that shows the system control strip.
-    @Published var controlStripSide: BarSide {
-        didSet { defaults.set(controlStripSide.rawValue, forKey: Keys.controlStripSide) }
+    /// Shown while the keyboard fn/Globe key is held.
+    @Published var fnHoldPage: BarPage {
+        didSet { defaults.set(fnHoldPage.rawValue, forKey: Keys.fnHoldPage) }
+    }
+
+    /// Bundle IDs of apps that always show F1–F12.
+    @Published var functionKeyApps: [String] {
+        didSet { defaults.set(functionKeyApps, forKey: Keys.functionKeyApps) }
     }
 
     @Published var displayTarget: DisplayTarget {
@@ -149,8 +159,9 @@ final class Settings: ObservableObject {
     }
 
     private init() {
-        layout = defaults.string(forKey: Keys.layout).flatMap(BarLayout.init) ?? .both
-        controlStripSide = defaults.string(forKey: Keys.controlStripSide).flatMap(BarSide.init) ?? .left
+        barPage = defaults.string(forKey: Keys.barPage).flatMap(BarPage.init) ?? .appControlsWithStrip
+        fnHoldPage = defaults.string(forKey: Keys.fnHoldPage).flatMap(BarPage.init) ?? .functionKeys
+        functionKeyApps = defaults.stringArray(forKey: Keys.functionKeyApps) ?? []
         displayTarget = defaults.string(forKey: Keys.displayTarget).flatMap(DisplayTarget.init) ?? .main
         sizePreference = defaults.string(forKey: Keys.sizePreference).flatMap(SizePreference.init) ?? .standard
         autoHide = defaults.object(forKey: Keys.autoHide) as? Bool ?? true
@@ -162,8 +173,9 @@ final class Settings: ObservableObject {
     }
 
     private enum Keys {
-        static let layout = "layout"
-        static let controlStripSide = "controlStripSide"
+        static let barPage = "barPage"
+        static let fnHoldPage = "fnHoldPage"
+        static let functionKeyApps = "functionKeyApps"
         static let displayTarget = "displayTarget"
         static let sizePreference = "sizePreference"
         static let autoHide = "autoHide"

@@ -68,17 +68,17 @@ enum BarSizer {
         return band.upperBound - band.lowerBound - BarMetrics.shadowMargin * 2
     }
 
-    static func metrics(for screen: NSScreen, content: BarContent) -> Result {
+    static func metrics(for screen: NSScreen) -> Result {
         let settings = Settings.shared
         let key = [
-            "\(screen.displayID ?? 0)", "\(screen.frame)", "\(screen.visibleFrame)", "\(content)",
+            "\(screen.displayID ?? 0)", "\(screen.frame)", "\(screen.visibleFrame)",
             settings.sizePreference.rawValue, settings.compactItems.map(\.rawValue).joined(separator: ","),
             "\(Permissions.shared.isTrusted)",
         ].joined(separator: "|")
         if let cached = cache[key] { return cached }
 
         let preferred = physicalScale(for: screen) * settings.sizePreference.multiplier
-        let result = fit(preferredScale: preferred, availableHeight: availableHeight(on: screen), content: content)
+        let result = fit(preferredScale: preferred, availableHeight: availableHeight(on: screen))
         cache[key] = result
         return result
     }
@@ -88,11 +88,11 @@ enum BarSizer {
         return min(max(scale, physicalScaleRange.lowerBound), physicalScaleRange.upperBound)
     }
 
-    static func fit(preferredScale: CGFloat, availableHeight: CGFloat, content: BarContent) -> Result {
+    static func fit(preferredScale: CGFloat, availableHeight: CGFloat) -> Result {
         var scale = preferredScale
         // Heights are close to linear in scale; refine a few times to absorb rounding.
         for _ in 0..<4 {
-            let tallest = tallestHeight(content: content, metrics: BarMetrics(scale: scale))
+            let tallest = tallestHeight(metrics: BarMetrics(scale: scale))
             guard tallest > availableHeight else { break }
             scale = max(minimumScale, scale * availableHeight / tallest - 0.01)
             if scale <= minimumScale { break }
@@ -100,10 +100,10 @@ enum BarSizer {
         return Result(metrics: BarMetrics(scale: scale), isShrunkToFit: scale < preferredScale - 0.001)
     }
 
-    /// Height of the tallest state this bar can be in (every preset shape,
-    /// expanded control strip, slider, fn keys).
-    static func tallestHeight(content: BarContent, metrics: BarMetrics) -> CGFloat {
-        variants(for: content).map { state in
+    /// Height of the tallest state the bar can be in: every page, every preset
+    /// shape, the expanded control strip and its sliders.
+    static func tallestHeight(metrics: BarMetrics) -> CGFloat {
+        variants().map { state in
             let view = BarBody(state: state)
                 .environment(\.barMetrics, metrics)
                 .fixedSize()
@@ -111,9 +111,10 @@ enum BarSizer {
         }.max() ?? 0
     }
 
-    private static func variants(for content: BarContent) -> [BarState] {
-        func make(_ configure: (BarState) -> Void) -> BarState {
-            let state = BarState(side: .left, content: content)
+    private static func variants() -> [BarState] {
+        func make(_ page: BarPage, _ configure: (BarState) -> Void = { _ in }) -> BarState {
+            let state = BarState(side: .right)
+            state.pageOverride = page
             configure(state)
             return state
         }
@@ -122,17 +123,15 @@ enum BarSizer {
         var seen = Set<[Int]>()
         let presets = ([AppPresets.fallback] + AppPresets.all).filter { seen.insert($0.groups.map(\.count)).inserted }
 
-        let stripModes: [ControlStripMode] = [.compact, .full, .slider(.volume)]
-        switch content {
-        case .controlStrip:
-            return stripModes.map { mode in make { $0.stripMode = mode } }
-        case .appRegion:
-            return presets.map { preset in make { $0.presetOverride = preset } }
-                + [make { $0.showFunctionKeys = true }]
-        case .combined:
-            return presets.map { preset in make { $0.presetOverride = preset } }
-                + stripModes.dropFirst().map { mode in make { $0.stripMode = mode } }
-                + [make { $0.showFunctionKeys = true }]
-        }
+        return presets.map { preset in make(.appControlsWithStrip) { $0.presetOverride = preset } }
+            + [
+                make(.appControlsWithStrip) { $0.stripMode = .full },
+                make(.appControlsWithStrip) { $0.stripMode = .slider(.volume) },
+                make(.appControlsWithStrip) { $0.showEmojiPicker = true },
+                make(.expandedStrip),
+                make(.functionKeys),
+                make(.quickActions),
+                make(.spaces),
+            ]
     }
 }

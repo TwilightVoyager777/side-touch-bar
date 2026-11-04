@@ -38,28 +38,6 @@ struct BarRootView: View {
     }
 }
 
-/// The bar's content at its natural size, without glass. Also used by
-/// `BarSizer` to measure how tall each state of the bar gets.
-struct BarBody: View {
-    @ObservedObject var state: BarState
-    @Environment(\.barMetrics) private var metrics
-
-    var body: some View {
-        Group {
-            switch state.content {
-            case .controlStrip:
-                ControlStripView(state: state)
-            case .appRegion:
-                AppRegionView(state: state)
-            case .combined:
-                CombinedBarView(state: state)
-            }
-        }
-        .padding(.vertical, metrics.innerPadding)
-        .frame(width: metrics.width)
-    }
-}
-
 /// Small pill on the screen edge while the bar is hidden, hinting where to reach.
 struct EdgeHandle: View {
     @Environment(\.barMetrics) private var metrics

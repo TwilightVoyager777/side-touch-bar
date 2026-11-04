@@ -1,19 +1,20 @@
 import AppKit
+import Carbon.HIToolbox
 import Combine
 
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private let settings = Settings.shared
     private let settingsWindow = SettingsWindowController()
-    private var controllers: [EdgeController] = []
+    private let bar = EdgeController(side: .right)
     private var statusItem: NSStatusItem?
     private var eventMonitors: [Any] = []
     private var cancellables: Set<AnyCancellable> = []
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        controllers = [EdgeController(side: .left), EdgeController(side: .right)]
-        layoutPanels()
+        layoutBar()
         applySettings()
+        bar.setEnabled(true)
         setupStatusItem()
         setupEventMonitors()
 
@@ -22,7 +23,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             .receive(on: RunLoop.main)
             .sink { [weak self] _ in
                 self?.applySettings()
-                self?.layoutPanels()
+                self?.layoutBar()
             }
             .store(in: &cancellables)
 
@@ -38,7 +39,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             object: nil,
             queue: .main
         ) { [weak self] _ in
-            MainActor.assumeIsolated { self?.layoutPanels() }
+            MainActor.assumeIsolated { self?.layoutBar() }
         }
 
         if !settings.hasLaunchedBefore {
@@ -53,15 +54,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         return true
     }
 
-    // MARK: - Panels
+    // MARK: - Bar
 
-    private func layoutPanels(pointer: NSPoint? = nil) {
+    private func layoutBar(pointer: NSPoint? = nil) {
         guard let screen = targetScreen(pointer: pointer) else { return }
         // A pointer-driven layout only acts when the pointer moved to another screen.
-        let moving = controllers.filter { pointer == nil || $0.screen?.displayID != screen.displayID }
-        guard !moving.isEmpty else { return }
-        moving.forEach { $0.setScreen(screen) }
-        updateDisplayStatus()
+        if pointer != nil, bar.screen?.displayID == screen.displayID { return }
+        bar.setScreen(screen)
+        DisplayStatus.shared.update(screen: screen, result: BarSizer.metrics(for: screen))
     }
 
     private func targetScreen(pointer: NSPoint?) -> NSScreen? {
@@ -77,64 +77,70 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
     }
 
-    private func updateDisplayStatus() {
-        guard let controller = controllers.first(where: \.isEnabled), let screen = controller.screen else { return }
-        DisplayStatus.shared.update(screen: screen, result: BarSizer.metrics(for: screen, content: controller.state.content))
-    }
-
     private func applySettings() {
-        defer { updateDisplayStatus() }
-        for controller in controllers {
-            let side = controller.side
-            switch settings.layout {
-            case .both:
-                controller.setContent(side == settings.controlStripSide ? .controlStrip : .appRegion)
-                controller.setEnabled(true)
-            case .left, .right:
-                controller.setContent(.combined)
-                controller.setEnabled(side.rawValue == settings.layout.rawValue)
-            }
-            controller.refreshMetrics()
-            controller.setAppearance(settings.appearance.nsAppearance)
-            controller.setAutoHide(settings.autoHide)
+        bar.refreshMetrics()
+        bar.setAppearance(settings.appearance.nsAppearance)
+        bar.setAutoHide(settings.autoHide)
+        if let screen = bar.screen {
+            DisplayStatus.shared.update(screen: screen, result: BarSizer.metrics(for: screen))
         }
     }
 
-    // MARK: - Mouse / touch tracking
+    // MARK: - Mouse / touch and fn key tracking
 
     private func setupEventMonitors() {
-        let mask: NSEvent.EventTypeMask = [.mouseMoved, .leftMouseDown, .leftMouseDragged, .rightMouseDown]
+        let mask: NSEvent.EventTypeMask = [.mouseMoved, .leftMouseDown, .leftMouseDragged, .rightMouseDown, .flagsChanged]
 
         if let global = NSEvent.addGlobalMonitorForEvents(matching: mask, handler: { [weak self] event in
-            let type = event.type
-            MainActor.assumeIsolated { self?.dispatchPointer(type) }
+            let info = EventInfo(event)
+            MainActor.assumeIsolated { self?.handle(info) }
         }) {
             eventMonitors.append(global)
         }
 
         if let local = NSEvent.addLocalMonitorForEvents(matching: mask, handler: { [weak self] event in
-            let type = event.type
-            MainActor.assumeIsolated { self?.dispatchPointer(type) }
+            let info = EventInfo(event)
+            MainActor.assumeIsolated { self?.handle(info) }
             return event
         }) {
             eventMonitors.append(local)
         }
     }
 
-    private func dispatchPointer(_ type: NSEvent.EventType) {
-        let location = NSEvent.mouseLocation
-        // Move the bars to the screen under the pointer, but never while one is open.
-        if settings.displayTarget == .followMouse, !controllers.contains(where: \.isExpanded) {
-            layoutPanels(pointer: location)
+    private struct EventInfo {
+        let type: NSEvent.EventType
+        let keyCode: UInt16
+        let isFnDown: Bool
+
+        init(_ event: NSEvent) {
+            type = event.type
+            keyCode = event.type == .flagsChanged ? event.keyCode : 0
+            isFnDown = event.modifierFlags.contains(.function)
         }
-        controllers.forEach { $0.handlePointer(at: location, type: type) }
+    }
+
+    private func handle(_ event: EventInfo) {
+        if event.type == .flagsChanged {
+            // Only the fn/Globe key itself; arrow keys also carry the function flag.
+            if event.keyCode == UInt16(kVK_Function) {
+                bar.setFnHeld(event.isFnDown)
+            }
+            return
+        }
+
+        let location = NSEvent.mouseLocation
+        // Move the bar to the screen under the pointer, but never while it is open.
+        if settings.displayTarget == .followMouse, !bar.isExpanded {
+            layoutBar(pointer: location)
+        }
+        bar.handlePointer(at: location, type: event.type)
     }
 
     // MARK: - Status item
 
     private func setupStatusItem() {
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
-        item.button?.image = NSImage(systemSymbolName: "sidebar.left", accessibilityDescription: "Side Touch Bar")
+        item.button?.image = NSImage(systemSymbolName: "sidebar.right", accessibilityDescription: "Side Touch Bar")
         let menu = NSMenu()
         menu.delegate = self
         item.menu = menu
@@ -147,13 +153,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         menu.addItem(menuItem("设置…", action: #selector(openSettings), key: ","))
         menu.addItem(.separator())
 
-        let layoutHeader = NSMenuItem(title: "布局", action: nil, keyEquivalent: "")
-        layoutHeader.isEnabled = false
-        menu.addItem(layoutHeader)
-        for layout in BarLayout.allCases {
-            let item = menuItem(layout.title, action: #selector(selectLayout(_:)))
-            item.representedObject = layout.rawValue
-            item.state = settings.layout == layout ? .on : .off
+        let header = NSMenuItem(title: "触控栏显示", action: nil, keyEquivalent: "")
+        header.isEnabled = false
+        menu.addItem(header)
+        for page in BarPage.allCases {
+            let item = menuItem(page.title, action: #selector(selectPage(_:)))
+            item.representedObject = page.rawValue
+            item.state = settings.barPage == page ? .on : .off
             item.indentationLevel = 1
             menu.addItem(item)
         }
@@ -183,9 +189,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         settingsWindow.show()
     }
 
-    @objc private func selectLayout(_ sender: NSMenuItem) {
-        guard let raw = sender.representedObject as? String, let layout = BarLayout(rawValue: raw) else { return }
-        settings.layout = layout
+    @objc private func selectPage(_ sender: NSMenuItem) {
+        guard let raw = sender.representedObject as? String, let page = BarPage(rawValue: raw) else { return }
+        settings.barPage = page
     }
 
     @objc private func toggleAutoHide() {

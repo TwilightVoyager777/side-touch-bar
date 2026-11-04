@@ -1,8 +1,9 @@
 import AppKit
 import SwiftUI
 
-/// Owns one side bar: positions its panel on the screen edge and decides
-/// when it slides in (pointer/touch reaches the edge) and out (pointer leaves or idles).
+/// Owns the side bar: positions its panel on the screen edge and decides
+/// when it slides in (pointer/touch reaches the edge, or fn is held) and out
+/// (pointer leaves or idles).
 @MainActor
 final class EdgeController {
     let state: BarState
@@ -20,9 +21,11 @@ final class EdgeController {
     private var shrinkTask: Task<Void, Never>?
     private var resetTask: Task<Void, Never>?
     private var collapseTimer: Timer?
+    /// The bar was revealed by holding fn and should hide again on release.
+    private var expandedByFn = false
 
     init(side: BarSide) {
-        state = BarState(side: side, content: side == .left ? .controlStrip : .appRegion)
+        state = BarState(side: side)
         panel.setRootView(BarRootView(state: state) { [weak self] size in
             MainActor.assumeIsolated { self?.contentSizeChanged(size) }
         })
@@ -33,16 +36,17 @@ final class EdgeController {
 
     func setScreen(_ screen: NSScreen) {
         self.screen = screen
+        SpacesStore.shared.displayID = screen.displayID
         refreshMetrics()
         updateFrame(immediately: true)
     }
 
     var isExpanded: Bool { state.isExpanded }
 
-    /// Re-picks bar sizes for the current screen, content and settings.
+    /// Re-picks bar sizes for the current screen and settings.
     func refreshMetrics() {
         guard let screen else { return }
-        let metrics = BarSizer.metrics(for: screen, content: state.content).metrics
+        let metrics = BarSizer.metrics(for: screen).metrics
         if metrics != state.metrics {
             state.metrics = metrics
             updateFrame(immediately: true)
@@ -60,10 +64,21 @@ final class EdgeController {
         }
     }
 
-    func setContent(_ content: BarContent) {
-        guard state.content != content else { return }
-        state.resetTransientState()
-        state.content = content
+    /// Like the Touch Bar: while fn is held, show the fn page, revealing the bar if hidden.
+    func setFnHeld(_ held: Bool) {
+        guard isEnabled, held != state.isFnHeld else { return }
+        withAnimation(BarAnimation.morph) { state.isFnHeld = held }
+        if held {
+            if !state.isExpanded {
+                expandedByFn = true
+                expand()
+            }
+        } else if expandedByFn {
+            expandedByFn = false
+            collapse()
+        } else {
+            lastActivity = Date()
+        }
     }
 
     func setAutoHide(_ enabled: Bool) {
@@ -135,6 +150,7 @@ final class EdgeController {
         guard state.isExpanded else { return }
         state.isExpanded = false
         state.isInteracting = false
+        expandedByFn = false
         panel.ignoresMouseEvents = true
 
         // Return to the compact strip once the bar has slid away.
@@ -154,7 +170,7 @@ final class EdgeController {
 
     private func tick() {
         let now = Date()
-        if state.isInteracting {
+        if state.isInteracting || state.isFnHeld {
             lastInside = now
             lastActivity = now
             return

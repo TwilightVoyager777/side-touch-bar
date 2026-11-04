@@ -42,13 +42,19 @@ struct BarIconView: View {
 /// circular fill that brightens and squishes on press.
 struct GlassBarButtonStyle: ButtonStyle {
     var tint: Color?
+    /// Circle by default; text buttons such as quick actions use a rounded square.
+    var cornerRadius: CGFloat?
 
     func makeBody(configuration: Configuration) -> some View {
         let pressed = configuration.isPressed
         configuration.label
             .foregroundStyle(tint == nil ? AnyShapeStyle(.primary) : AnyShapeStyle(.white))
             .background {
-                Circle().fill(fill(pressed: pressed))
+                if let cornerRadius {
+                    RoundedRectangle(cornerRadius: cornerRadius, style: .continuous).fill(fill(pressed: pressed))
+                } else {
+                    Circle().fill(fill(pressed: pressed))
+                }
             }
             .scaleEffect(pressed ? 0.88 : 1)
             .animation(BarAnimation.press, value: pressed)
@@ -75,6 +81,8 @@ struct BarDivider: View {
 
 struct ItemGroupsView: View {
     let groups: [[BarItem]]
+    /// Needed for items that change the bar itself, such as the emoji picker.
+    var state: BarState?
 
     @Environment(\.barMetrics) private var metrics
 
@@ -84,10 +92,35 @@ struct ItemGroupsView: View {
                 if index > 0 { BarDivider() }
                 ForEach(group) { item in
                     BarButton(icon: item.icon, help: item.title) {
-                        ActionRunner.run(item.action)
+                        perform(item.action)
                     }
                 }
             }
         }
+    }
+
+    private func perform(_ action: BarAction) {
+        if case .emojiPicker = action {
+            withAnimation(BarAnimation.morph) { state?.showEmojiPicker = true }
+        } else {
+            ActionRunner.run(action)
+        }
+    }
+}
+
+/// A fixed-height, scrolling column of buttons for long lists.
+struct ScrollingColumn<Content: View>: View {
+    @ViewBuilder var content: Content
+
+    @Environment(\.barMetrics) private var metrics
+
+    var body: some View {
+        ScrollView(.vertical) {
+            VStack(spacing: metrics.spacing) {
+                content
+            }
+        }
+        .scrollIndicators(.never)
+        .frame(width: metrics.width, height: metrics.scrollPageHeight)
     }
 }
