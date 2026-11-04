@@ -14,6 +14,42 @@ enum BarLayout: String, CaseIterable, Identifiable {
     }
 }
 
+enum DisplayTarget: String, CaseIterable, Identifiable {
+    case main, builtIn, followMouse
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .main: "主显示器"
+        case .builtIn: "内建显示器"
+        case .followMouse: "跟随鼠标"
+        }
+    }
+}
+
+enum SizePreference: String, CaseIterable, Identifiable {
+    case small, standard, large
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .small: "小"
+        case .standard: "标准"
+        case .large: "大"
+        }
+    }
+
+    var multiplier: CGFloat {
+        switch self {
+        case .small: 0.88
+        case .standard: 1
+        case .large: 1.15
+        }
+    }
+}
+
 enum GlassStyle: String, CaseIterable, Identifiable {
     case regular, clear
 
@@ -76,6 +112,15 @@ final class Settings: ObservableObject {
         didSet { defaults.set(controlStripSide.rawValue, forKey: Keys.controlStripSide) }
     }
 
+    @Published var displayTarget: DisplayTarget {
+        didSet { defaults.set(displayTarget.rawValue, forKey: Keys.displayTarget) }
+    }
+
+    /// Applied on top of the automatic, physical-size based scale.
+    @Published var sizePreference: SizePreference {
+        didSet { defaults.set(sizePreference.rawValue, forKey: Keys.sizePreference) }
+    }
+
     @Published var autoHide: Bool {
         didSet { defaults.set(autoHide, forKey: Keys.autoHide) }
     }
@@ -106,6 +151,8 @@ final class Settings: ObservableObject {
     private init() {
         layout = defaults.string(forKey: Keys.layout).flatMap(BarLayout.init) ?? .both
         controlStripSide = defaults.string(forKey: Keys.controlStripSide).flatMap(BarSide.init) ?? .left
+        displayTarget = defaults.string(forKey: Keys.displayTarget).flatMap(DisplayTarget.init) ?? .main
+        sizePreference = defaults.string(forKey: Keys.sizePreference).flatMap(SizePreference.init) ?? .standard
         autoHide = defaults.object(forKey: Keys.autoHide) as? Bool ?? true
         idleDelay = defaults.object(forKey: Keys.idleDelay) as? Double ?? 8
         glassStyle = defaults.string(forKey: Keys.glassStyle).flatMap(GlassStyle.init) ?? .regular
@@ -117,6 +164,8 @@ final class Settings: ObservableObject {
     private enum Keys {
         static let layout = "layout"
         static let controlStripSide = "controlStripSide"
+        static let displayTarget = "displayTarget"
+        static let sizePreference = "sizePreference"
         static let autoHide = "autoHide"
         static let idleDelay = "idleDelay"
         static let glassStyle = "glassStyle"

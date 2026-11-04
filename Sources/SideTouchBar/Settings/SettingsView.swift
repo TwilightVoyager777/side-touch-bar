@@ -3,6 +3,18 @@ import SwiftUI
 struct SettingsView: View {
     @ObservedObject private var settings = Settings.shared
     @ObservedObject private var permissions = Permissions.shared
+    @ObservedObject private var display = DisplayStatus.shared
+
+    private var buttonSizeDescription: String {
+        var text = "按钮 \(Int(display.buttonPoints)) pt"
+        if let millimeters = display.buttonMillimeters {
+            text += String(format: "（约 %.1f mm）", millimeters)
+        }
+        if display.isShrunkToFit {
+            text += "，已缩小以适应屏幕高度"
+        }
+        return text
+    }
 
     var body: some View {
         Form {
@@ -21,6 +33,31 @@ struct SettingsView: View {
                 Text("布局")
             } footer: {
                 Text(layoutFooter)
+                    .foregroundStyle(.secondary)
+            }
+
+            Section {
+                Picker("显示在", selection: $settings.displayTarget) {
+                    ForEach(DisplayTarget.allCases) { Text($0.title).tag($0) }
+                }
+
+                Picker("尺寸", selection: $settings.sizePreference) {
+                    ForEach(SizePreference.allCases) { Text($0.title).tag($0) }
+                }
+                .pickerStyle(.segmented)
+
+                LabeledContent("当前显示器") {
+                    VStack(alignment: .trailing, spacing: 2) {
+                        Text(display.screenName)
+                        Text(buttonSizeDescription)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            } header: {
+                Text("显示器")
+            } footer: {
+                Text("尺寸以 14/16 英寸 MacBook Pro 为基准，按钮在不同显示器上保持差不多的实际大小；放不下时会自动缩小。")
                     .foregroundStyle(.secondary)
             }
 

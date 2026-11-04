@@ -20,6 +20,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         // objectWillChange fires before the new value is stored, so apply on the next run loop pass.
         settings.objectWillChange
             .receive(on: RunLoop.main)
+            .sink { [weak self] _ in
+                self?.applySettings()
+                self?.layoutPanels()
+            }
+            .store(in: &cancellables)
+
+        // The permission warning button changes the bar height.
+        Permissions.shared.$isTrusted
+            .removeDuplicates()
+            .receive(on: RunLoop.main)
             .sink { [weak self] _ in self?.applySettings() }
             .store(in: &cancellables)
 
@@ -45,12 +55,35 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     // MARK: - Panels
 
-    private func layoutPanels() {
-        guard let screen = NSScreen.screens.first ?? NSScreen.main else { return }
-        controllers.forEach { $0.setScreen(screen) }
+    private func layoutPanels(pointer: NSPoint? = nil) {
+        guard let screen = targetScreen(pointer: pointer) else { return }
+        // A pointer-driven layout only acts when the pointer moved to another screen.
+        let moving = controllers.filter { pointer == nil || $0.screen?.displayID != screen.displayID }
+        guard !moving.isEmpty else { return }
+        moving.forEach { $0.setScreen(screen) }
+        updateDisplayStatus()
+    }
+
+    private func targetScreen(pointer: NSPoint?) -> NSScreen? {
+        let screens = NSScreen.screens
+        switch settings.displayTarget {
+        case .main:
+            return screens.first
+        case .builtIn:
+            return screens.first(where: \.isBuiltIn) ?? screens.first
+        case .followMouse:
+            let point = pointer ?? NSEvent.mouseLocation
+            return screens.first { NSMouseInRect(point, $0.frame, false) } ?? screens.first
+        }
+    }
+
+    private func updateDisplayStatus() {
+        guard let controller = controllers.first(where: \.isEnabled), let screen = controller.screen else { return }
+        DisplayStatus.shared.update(screen: screen, result: BarSizer.metrics(for: screen, content: controller.state.content))
     }
 
     private func applySettings() {
+        defer { updateDisplayStatus() }
         for controller in controllers {
             let side = controller.side
             switch settings.layout {
@@ -61,6 +94,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                 controller.setContent(.combined)
                 controller.setEnabled(side.rawValue == settings.layout.rawValue)
             }
+            controller.refreshMetrics()
             controller.setAppearance(settings.appearance.nsAppearance)
             controller.setAutoHide(settings.autoHide)
         }
@@ -89,6 +123,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     private func dispatchPointer(_ type: NSEvent.EventType) {
         let location = NSEvent.mouseLocation
+        // Move the bars to the screen under the pointer, but never while one is open.
+        if settings.displayTarget == .followMouse, !controllers.contains(where: \.isExpanded) {
+            layoutPanels(pointer: location)
+        }
         controllers.forEach { $0.handlePointer(at: location, type: type) }
     }
 
