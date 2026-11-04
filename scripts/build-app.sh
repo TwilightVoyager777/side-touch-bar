@@ -1,13 +1,21 @@
 #!/usr/bin/env bash
 # Builds SideTouchBar and assembles build/SideTouchBar.app
 # Usage: scripts/build-app.sh [debug|release]
-# Set SIGN_IDENTITY to a real certificate to keep Accessibility permission across rebuilds.
+# Signs with $SIGN_IDENTITY, else the local identity from create-signing-identity.sh
+# (so permissions survive rebuilds), else ad hoc.
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
 CONFIG="${1:-release}"
-SIGN_IDENTITY="${SIGN_IDENTITY:--}"
+LOCAL_IDENTITY="SideTouchBar Local Signing"
+if [ -z "${SIGN_IDENTITY:-}" ]; then
+    if security find-identity -p codesigning 2>/dev/null | grep -q "$LOCAL_IDENTITY"; then
+        SIGN_IDENTITY="$LOCAL_IDENTITY"
+    else
+        SIGN_IDENTITY="-"
+    fi
+fi
 APP="build/SideTouchBar.app"
 
 swift build -c "$CONFIG"
@@ -17,6 +25,8 @@ rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$BIN_DIR/SideTouchBar" "$APP/Contents/MacOS/SideTouchBar"
 cp Resources/Info.plist "$APP/Contents/Info.plist"
+# Localized Info.plist strings (permission prompts).
+cp -R Resources/*.lproj "$APP/Contents/Resources/" 2>/dev/null || true
 
 # Now Playing helper, loaded by /usr/bin/perl at runtime (see Helpers/NowPlayingHelper.m).
 HELPER="$APP/Contents/Resources/libNowPlayingHelper.dylib"
@@ -25,4 +35,4 @@ codesign --force --sign "$SIGN_IDENTITY" "$HELPER"
 
 codesign --force --sign "$SIGN_IDENTITY" "$APP"
 
-echo "Built $APP"
+echo "Built $APP (signed: $SIGN_IDENTITY)"

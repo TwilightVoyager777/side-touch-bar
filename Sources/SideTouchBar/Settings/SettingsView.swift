@@ -2,19 +2,31 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 struct SettingsView: View {
+    @ObservedObject private var navigation = SettingsNavigation.shared
+    @ObservedObject private var settings = Settings.shared
+
     var body: some View {
-        TabView {
+        TabView(selection: $navigation.tab) {
+            SetupSettingsView()
+                .tabItem { Label(tr("开始"), systemImage: "checklist") }
+                .tag(SettingsNavigation.Tab.setup)
             GeneralSettingsView()
-                .tabItem { Label("通用", systemImage: "gearshape") }
+                .tabItem { Label(tr("通用"), systemImage: "gearshape") }
+                .tag(SettingsNavigation.Tab.general)
             AISettingsView()
-                .tabItem { Label("AI 编程", systemImage: "sparkles") }
+                .tabItem { Label(tr("AI 编程"), systemImage: "sparkles") }
+                .tag(SettingsNavigation.Tab.ai)
             ButtonSettingsView()
-                .tabItem { Label("按钮", systemImage: "square.grid.2x2") }
+                .tabItem { Label(tr("按钮"), systemImage: "square.grid.2x2") }
+                .tag(SettingsNavigation.Tab.buttons)
             MediaSettingsView()
-                .tabItem { Label("播放", systemImage: "play.circle") }
+                .tabItem { Label(tr("播放"), systemImage: "play.circle") }
+                .tag(SettingsNavigation.Tab.media)
         }
-        .frame(width: 520)
-        .frame(minHeight: 600)
+        // Rebuild every label when the interface language changes.
+        .id(settings.language)
+        .frame(width: 540)
+        .frame(minHeight: 620)
     }
 }
 
@@ -108,6 +120,18 @@ struct GeneralSettingsView: View {
                     ForEach(AppearanceMode.allCases) { Text($0.title).tag($0) }
                 }
                 .pickerStyle(.segmented)
+            }
+
+            Section {
+                Toggle("危险操作需要长按（锁屏、删除、总是允许…）", isOn: $settings.touchConfirm)
+                Toggle("按住连续触发（音量、缩放、快进…）", isOn: $settings.touchRepeat)
+                Toggle("从边缘滑入唤出、在栏上往外滑收起", isOn: $settings.touchEdgeSwipe)
+                Toggle("在输入框里自动显示文字编辑页", isOn: $settings.touchAutoTextPage)
+            } header: {
+                Text("触屏")
+            } footer: {
+                Text("控制条上的亮度、音量、键盘背光：点一下打开滑条，按住上下拖动直接调节。文字编辑页的触控区可以像 iPhone 按住空格键那样拖动光标。")
+                    .foregroundStyle(.secondary)
             }
 
             Section("行为") {

@@ -153,6 +153,32 @@ final class Settings: ObservableObject {
         didSet { defaults.set(compactItems.map(\.rawValue), forKey: Keys.compactItems) }
     }
 
+    // MARK: Touch
+
+    /// Dangerous buttons need a hold.
+    @Published var touchConfirm: Bool {
+        didSet { defaults.set(touchConfirm, forKey: Keys.touchConfirm) }
+    }
+
+    /// Volume, zoom, skip… repeat while held.
+    @Published var touchRepeat: Bool {
+        didSet { defaults.set(touchRepeat, forKey: Keys.touchRepeat) }
+    }
+
+    /// Swipe in from the edge to reveal, swipe out on the bar to hide.
+    @Published var touchEdgeSwipe: Bool {
+        didSet { defaults.set(touchEdgeSwipe, forKey: Keys.touchEdgeSwipe) }
+    }
+
+    /// Show the text editing page while typing in a text field.
+    @Published var touchAutoTextPage: Bool {
+        didSet { defaults.set(touchAutoTextPage, forKey: Keys.touchAutoTextPage) }
+    }
+
+    @Published var language: AppLanguage {
+        didSet { defaults.set(language.rawValue, forKey: L10n.languageKey) }
+    }
+
     // MARK: AI coding
 
     @Published var aiEnabled: Bool {
@@ -215,6 +241,11 @@ final class Settings: ObservableObject {
         appearance = defaults.string(forKey: Keys.appearance).flatMap(AppearanceMode.init) ?? .system
         compactItems = (defaults.stringArray(forKey: Keys.compactItems)?.compactMap(ControlItem.init))
             ?? ControlItem.defaultCompact
+        touchConfirm = defaults.object(forKey: Keys.touchConfirm) as? Bool ?? true
+        touchRepeat = defaults.object(forKey: Keys.touchRepeat) as? Bool ?? true
+        touchEdgeSwipe = defaults.object(forKey: Keys.touchEdgeSwipe) as? Bool ?? true
+        touchAutoTextPage = defaults.object(forKey: Keys.touchAutoTextPage) as? Bool ?? true
+        language = L10n.language
         aiEnabled = defaults.object(forKey: Keys.aiEnabled) as? Bool ?? true
         aiAutoReveal = defaults.object(forKey: Keys.aiAutoReveal) as? Bool ?? true
         aiSoundOnDone = defaults.object(forKey: Keys.aiSoundOnDone) as? Bool ?? false
@@ -246,6 +277,10 @@ final class Settings: ObservableObject {
         static let appearance = "appearance"
         static let compactItems = "compactItems"
         static let hasLaunched = "hasLaunched"
+        static let touchConfirm = "touchConfirm"
+        static let touchRepeat = "touchRepeat"
+        static let touchEdgeSwipe = "touchEdgeSwipe"
+        static let touchAutoTextPage = "touchAutoTextPage"
         static let aiEnabled = "aiEnabled"
         static let aiAutoReveal = "aiAutoReveal"
         static let aiSoundOnDone = "aiSoundOnDone"

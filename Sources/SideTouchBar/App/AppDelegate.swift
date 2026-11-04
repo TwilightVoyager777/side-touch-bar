@@ -21,6 +21,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         AgentMonitor.shared.start()
         AIContextMonitor.shared.refresh()
         _ = MenuStateMonitor.shared
+        BarActivity.shared.$isExpanded
+            .removeDuplicates()
+            .sink { TextFocusMonitor.shared.setActive($0) }
+            .store(in: &cancellables)
 
         AgentMonitor.shared.$revealToken
             .dropFirst()
@@ -63,6 +67,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
         if !settings.hasLaunchedBefore {
             settings.hasLaunchedBefore = true
+            SettingsNavigation.shared.tab = .setup
             settingsWindow.show()
         }
         _ = Permissions.shared.requestIfNeeded()
@@ -113,7 +118,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     // MARK: - Mouse / touch and fn key tracking
 
     private func setupEventMonitors() {
-        let mask: NSEvent.EventTypeMask = [.mouseMoved, .leftMouseDown, .leftMouseDragged, .rightMouseDown, .flagsChanged]
+        let mask: NSEvent.EventTypeMask = [.mouseMoved, .leftMouseDown, .leftMouseDragged, .leftMouseUp, .rightMouseDown, .flagsChanged]
 
         if let global = NSEvent.addGlobalMonitorForEvents(matching: mask, handler: { [weak self] event in
             let info = EventInfo(event)
