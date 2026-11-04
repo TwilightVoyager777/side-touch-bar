@@ -2,6 +2,23 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 struct SettingsView: View {
+    var body: some View {
+        TabView {
+            GeneralSettingsView()
+                .tabItem { Label("通用", systemImage: "gearshape") }
+            AISettingsView()
+                .tabItem { Label("AI 编程", systemImage: "sparkles") }
+            ButtonSettingsView()
+                .tabItem { Label("按钮", systemImage: "square.grid.2x2") }
+            MediaSettingsView()
+                .tabItem { Label("播放", systemImage: "play.circle") }
+        }
+        .frame(width: 520)
+        .frame(minHeight: 600)
+    }
+}
+
+struct GeneralSettingsView: View {
     @ObservedObject private var settings = Settings.shared
     @ObservedObject private var permissions = Permissions.shared
     @ObservedObject private var display = DisplayStatus.shared
@@ -143,18 +160,10 @@ struct SettingsView: View {
             }
         }
         .formStyle(.grouped)
-        .frame(width: 480)
-        .frame(minHeight: 560)
     }
 
     private func addFunctionKeyApp() {
-        let panel = NSOpenPanel()
-        panel.allowedContentTypes = [.application]
-        panel.directoryURL = URL(fileURLWithPath: "/Applications")
-        panel.allowsMultipleSelection = true
-        panel.prompt = "添加"
-        guard panel.runModal() == .OK else { return }
-        let ids = panel.urls.compactMap { Bundle(url: $0)?.bundleIdentifier }
+        let ids = chooseApps()
         settings.functionKeyApps += ids.filter { !settings.functionKeyApps.contains($0) }
     }
 
@@ -172,8 +181,37 @@ struct SettingsView: View {
     }
 }
 
+/// Lets the user pick apps from /Applications; returns their bundle IDs.
+@MainActor
+func chooseApps(multiple: Bool = true) -> [String] {
+    let panel = NSOpenPanel()
+    panel.allowedContentTypes = [.application]
+    panel.directoryURL = URL(fileURLWithPath: "/Applications")
+    panel.allowsMultipleSelection = multiple
+    panel.prompt = "添加"
+    guard panel.runModal() == .OK else { return [] }
+    return panel.urls.compactMap { Bundle(url: $0)?.bundleIdentifier }
+}
+
+/// Asks before changing files outside the app.
+@MainActor
+func confirm(_ title: String, _ message: String, action: String) -> Bool {
+    let alert = NSAlert()
+    alert.messageText = title
+    alert.informativeText = message
+    alert.addButton(withTitle: action)
+    alert.addButton(withTitle: "取消")
+    return alert.runModal() == .alertFirstButtonReturn
+}
+
+@MainActor
+func showError(_ error: Error) {
+    let alert = NSAlert(error: error)
+    alert.runModal()
+}
+
 /// App icon and name for a bundle ID.
-private struct AppLabel: View {
+struct AppLabel: View {
     let bundleID: String
 
     var body: some View {
