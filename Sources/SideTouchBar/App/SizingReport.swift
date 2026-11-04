@@ -1,4 +1,5 @@
 import AppKit
+import SwiftUI
 
 @MainActor
 enum SizingReport {
@@ -17,6 +18,16 @@ enum SizingReport {
             ("27in 5K @2x 2560x1440", 2560, 1440, 30, 596.0),
         ]
         print("tallest @1x", BarSizer.tallestHeight(metrics: .standard))
+        if CommandLine.arguments.contains("--verbose") {
+            for state in BarSizer.variants() {
+                let height = NSHostingView(rootView: BarBody(state: state).environment(\.barMetrics, .standard).fixedSize()).fittingSize.height
+                let page = state.presetOverride.map { "\($0.id)#\(state.presetPageIndex)" } ?? "-"
+                print(String(format: "%5.0f", height), state.pageOverride.map { "\($0)" } ?? "", page,
+                      state.showSessions ? "sessions" : "", state.nowPlayingOverride == true ? "nowPlaying:\(state.nowPlayingPage)" : "",
+                      state.agentSessionSample?.status == .needsPermission ? "attention" : "", state.stripMode != .compact ? "\(state.stripMode)" : "",
+                      state.showEmojiPicker ? "emoji" : "")
+            }
+        }
         for (name, width, height, menuBar, mm) in screens {
             let pointsPerMillimeter = width / mm
             let preferred = BarSizer.physicalScale(pointsPerMillimeter: pointsPerMillimeter)

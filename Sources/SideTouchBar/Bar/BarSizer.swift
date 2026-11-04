@@ -111,7 +111,7 @@ enum BarSizer {
         }.max() ?? 0
     }
 
-    private static func variants() -> [BarState] {
+    static func variants() -> [BarState] {
         func make(_ page: BarPage, _ configure: (BarState) -> Void = { _ in }) -> BarState {
             let state = BarState(side: .right)
             state.pageOverride = page
