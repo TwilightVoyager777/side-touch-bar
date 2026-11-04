@@ -91,22 +91,48 @@ enum AppPresets {
             "org.mozilla.firefox",
             "com.brave.Browser",
         ],
-        groups: [
-            [
-                .key("后退", "chevron.left", KeyCombo(kVK_ANSI_LeftBracket, cmd)),
-                .key("前进", "chevron.right", KeyCombo(kVK_ANSI_RightBracket, cmd)),
-                .key("刷新", "arrow.clockwise", KeyCombo(kVK_ANSI_R, cmd)),
-            ],
-            [
-                .key("地址栏", "magnifyingglass", KeyCombo(kVK_ANSI_L, cmd)),
-                .key("新标签页", "plus", KeyCombo(kVK_ANSI_T, cmd)),
-                .key("关闭标签页", "xmark", KeyCombo(kVK_ANSI_W, cmd)),
-            ],
-            [
-                .key("上一个标签页", "arrow.up.square", KeyCombo(kVK_ANSI_LeftBracket, cmdShift)),
-                .key("下一个标签页", "arrow.down.square", KeyCombo(kVK_ANSI_RightBracket, cmdShift)),
-                .key("显示所有标签页", "square.grid.2x2", KeyCombo(kVK_ANSI_Backslash, cmdShift)),
-            ],
+        pages: [
+            PresetPage(id: "browse", title: "浏览", symbol: "safari", groups: [
+                [
+                    .key("后退", "chevron.left", KeyCombo(kVK_ANSI_LeftBracket, cmd)),
+                    .key("前进", "chevron.right", KeyCombo(kVK_ANSI_RightBracket, cmd)),
+                    .key("刷新", "arrow.clockwise", KeyCombo(kVK_ANSI_R, cmd)),
+                ],
+                [
+                    .key("地址栏", "magnifyingglass", KeyCombo(kVK_ANSI_L, cmd)),
+                    .key("新标签页", "plus", KeyCombo(kVK_ANSI_T, cmd)),
+                    .key("关闭标签页", "xmark", KeyCombo(kVK_ANSI_W, cmd)),
+                ],
+                [
+                    .key("重新打开关闭的标签页 ⇧⌘T", "arrow.uturn.backward", KeyCombo(kVK_ANSI_T, cmdShift)),
+                    .ai("把这个网页发给 AI", "paperplane.fill", .sendPage),
+                ],
+            ]),
+            PresetPage(id: "tabs", title: "标签页", symbol: "square.on.square", groups: [], extras: [.browserTabs]),
+            PresetPage(id: "page", title: "页面", symbol: "scroll", groups: [
+                [
+                    .key("回到顶部", "arrow.up.to.line", KeyCombo(kVK_UpArrow, cmd)),
+                    .key("到底部", "arrow.down.to.line", KeyCombo(kVK_DownArrow, cmd)),
+                ],
+                [
+                    .key("放大", "plus.magnifyingglass", KeyCombo(kVK_ANSI_Equal, cmd)),
+                    .key("缩小", "minus.magnifyingglass", KeyCombo(kVK_ANSI_Minus, cmd)),
+                    .key("实际大小", "1.magnifyingglass", KeyCombo(kVK_ANSI_0, cmd)),
+                    .key("页内查找", "text.magnifyingglass", KeyCombo(kVK_ANSI_F, cmd)),
+                ],
+            ], extras: [.scrollPad]),
+            PresetPage(id: "tools", title: "工具", symbol: "hammer", groups: [
+                [
+                    BarItem(title: "下载", icon: .symbol("tray.and.arrow.down"), action: .menuSearch(["Downloads", "下载"], fallback: KeyCombo(kVK_ANSI_L, cmdOpt))),
+                    .key("历史记录 ⌘Y", "clock.arrow.circlepath", KeyCombo(kVK_ANSI_Y, cmd)),
+                    .key("加入书签 ⌘D", "star", KeyCombo(kVK_ANSI_D, cmd)),
+                ],
+                [
+                    BarItem(title: "阅读模式", icon: .symbol("book"), action: .menuSearch(["Show Reader", "Reader Mode", "阅读器"], fallback: KeyCombo(kVK_ANSI_R, cmdShift))),
+                    .key("开发者工具 ⌥⌘I", "chevron.left.forwardslash.chevron.right", KeyCombo(kVK_ANSI_I, cmdOpt)),
+                ],
+            ]),
+            PresetPage(id: "sites", title: "网站", symbol: "star.fill", groups: [], extras: [.favoriteSites]),
         ]
     )
 
@@ -152,51 +178,6 @@ enum AppPresets {
                 .key("上一条命令", "arrow.up", KeyCombo(kVK_UpArrow)),
                 .key("中断 (⌃C)", "stop.circle", KeyCombo(kVK_ANSI_C, ctrl)),
                 .key("清屏", "clear", KeyCombo(kVK_ANSI_K, cmd)),
-            ],
-        ]
-    )
-
-    static let codeEditor = AppPreset(
-        id: "codeEditor",
-        bundleIDs: [
-            "com.microsoft.VSCode",
-            "com.todesktop.230313mzl4w4u92",
-            "dev.zed.Zed",
-            "com.exafunction.windsurf",
-        ],
-        groups: [
-            [
-                .key("命令面板", "command", KeyCombo(kVK_ANSI_P, cmdShift)),
-                .key("快速打开", "doc.text.magnifyingglass", KeyCombo(kVK_ANSI_P, cmd)),
-            ],
-            [
-                .key("侧边栏", "sidebar.left", KeyCombo(kVK_ANSI_B, cmd)),
-                .key("终端", "terminal", KeyCombo(kVK_ANSI_Grave, ctrl)),
-            ],
-            [
-                .key("查找", "magnifyingglass", KeyCombo(kVK_ANSI_F, cmd)),
-                .key("注释", "chevron.left.forwardslash.chevron.right", KeyCombo(kVK_ANSI_Slash, cmd)),
-                .key("保存", "square.and.arrow.down", KeyCombo(kVK_ANSI_S, cmd)),
-            ],
-        ]
-    )
-
-    static let xcode = AppPreset(
-        id: "xcode",
-        bundleIDs: ["com.apple.dt.Xcode"],
-        groups: [
-            [
-                .key("运行", "play.fill", KeyCombo(kVK_ANSI_R, cmd)),
-                .key("停止", "stop.fill", KeyCombo(kVK_ANSI_Period, cmd)),
-                .key("构建", "hammer.fill", KeyCombo(kVK_ANSI_B, cmd)),
-            ],
-            [
-                .key("快速打开", "doc.text.magnifyingglass", KeyCombo(kVK_ANSI_O, cmdShift)),
-                .key("导航栏", "sidebar.left", KeyCombo(kVK_ANSI_0, cmd)),
-            ],
-            [
-                .key("全局查找", "magnifyingglass", KeyCombo(kVK_ANSI_F, cmdShift)),
-                .key("注释", "chevron.left.forwardslash.chevron.right", KeyCombo(kVK_ANSI_Slash, cmd)),
             ],
         ]
     )
@@ -404,8 +385,8 @@ enum AppPresets {
     )
 
     static let all: [AppPreset] = [
-        browser, finder, terminal, codeEditor, xcode, media,
+        browser, finder, terminal, media,
         mail, calendar, preview, messages, notes, textEditing, keynote,
         calculator, photos,
-    ]
+    ] + IDEPresets.all
 }
