@@ -8,6 +8,9 @@ enum SideTouchBarMain {
                 SizingReport.run()
                 return
             }
+            if CommandLine.arguments.contains("--prepare-uninstall") {
+                exit(Uninstaller.run() ? 0 : 1)
+            }
             let app = NSApplication.shared
             let delegate = AppDelegate()
             app.delegate = delegate

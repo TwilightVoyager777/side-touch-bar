@@ -10,6 +10,11 @@ cd "$(dirname "$0")/.."
 python3 scripts/check-l10n.py
 
 DEVELOPER_DIR="$(xcode-select -p)"
+if [[ "$DEVELOPER_DIR" != *CommandLineTools* ]]; then
+    # Full Xcode (e.g. GitHub Actions) sets up Swift Testing by itself.
+    exec swift test "$@"
+fi
+
 FRAMEWORKS="$DEVELOPER_DIR/Library/Developer/Frameworks"
 PLUGINS="$DEVELOPER_DIR/usr/lib/swift/host/plugins/testing"
 
