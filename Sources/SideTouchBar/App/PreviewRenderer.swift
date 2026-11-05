@@ -79,18 +79,22 @@ private struct PreviewSheet: View {
     @Environment(\.colorScheme) private var scheme
 
     var body: some View {
-        HStack(alignment: .top, spacing: 56) {
+        // Equal columns, so the bars are evenly spaced whatever the caption length.
+        HStack(alignment: .top, spacing: 0) {
             ForEach(Array(PreviewRenderer.states().enumerated()), id: \.offset) { _, entry in
                 VStack(spacing: 18) {
                     Text(entry.0)
                         .font(.system(size: 15, weight: .semibold))
                         .foregroundStyle(.white)
                         .shadow(color: .black.opacity(0.35), radius: 3, y: 1)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
                     PreviewBar(state: entry.1)
                 }
+                .frame(width: 176)
             }
         }
-        .padding(.horizontal, 64)
+        .padding(.horizontal, 40)
         .padding(.vertical, 48)
         .background(
             LinearGradient(

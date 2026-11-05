@@ -16,7 +16,7 @@ Built for the touch-screen Macs to come — and fully usable with a mouse or tra
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/preview-dark.jpg">
-  <img src="docs/images/preview-light.jpg" alt="Side Touch Bar showing Finder buttons, playback controls, a Claude Code approval card, Codex in a terminal and the VS Code debugger" width="760">
+  <img src="docs/images/preview-light.jpg" alt="Side Touch Bar showing Finder buttons, playback controls, a Claude Code approval card, Codex in a terminal and the VS Code debugger" width="780">
 </picture>
 
 <sub>Rendered from the app's own SwiftUI views; the Liquid Glass material is approximated in these images.</sub>
