@@ -25,9 +25,11 @@ final class EdgeController {
     private var expandedByFn = false
     /// Stay open while an agent waits for a permission decision, up to this time.
     private var holdOpenUntil: Date?
+    private var swipe: EdgeSwipeRecognizer
 
     init(side: BarSide) {
         state = BarState(side: side)
+        swipe = EdgeSwipeRecognizer(side: side)
         panel.setRootView(BarRootView(state: state) { [weak self] size in
             MainActor.assumeIsolated { self?.contentSizeChanged(size) }
         })
@@ -84,14 +86,18 @@ final class EdgeController {
                 expand()
             }
         } else if expandedByFn {
-            expandedByFn = false
-            collapse()
+            // Back to how it was before fn, even when the bar is always shown
+            // but was swiped away.
+            forceCollapse()
         } else {
             lastActivity = Date()
         }
     }
 
+    /// Called on every settings change, so only act when the value changes;
+    /// otherwise an always-shown bar the user swiped away would pop back out.
     func setAutoHide(_ enabled: Bool) {
+        guard enabled != autoHide else { return }
         autoHide = enabled
         if enabled {
             if state.isExpanded { startCollapseTimer() }
@@ -147,34 +153,16 @@ final class EdgeController {
 
     // MARK: - Swipes
 
-    private var swipeOrigin: (point: NSPoint, time: Date)?
-
-    /// Swipe in from the screen edge to reveal the bar; swipe out across the
-    /// bar toward the edge to hide it. Touch screens deliver these as mouse drags.
     private func trackSwipe(at point: NSPoint, type: NSEvent.EventType) {
         guard let screen else { return }
-        switch type {
-        case .leftMouseDown:
-            let edgeDistance = side == .right ? screen.frame.maxX - point.x : point.x - screen.frame.minX
-            let band = barRect.insetBy(dx: 0, dy: -40)
-            let startsAtEdge = !state.isExpanded && edgeDistance <= 24 && point.y >= band.minY && point.y <= band.maxY
-            let startsOnBar = state.isExpanded && barRect.contains(point)
-            swipeOrigin = startsAtEdge || startsOnBar ? (point, Date()) : nil
-        case .leftMouseDragged:
-            guard let origin = swipeOrigin, Date().timeIntervalSince(origin.time) < 0.8 else { return }
-            let inward = side == .right ? origin.point.x - point.x : point.x - origin.point.x
-            let vertical = abs(point.y - origin.point.y)
-            if !state.isExpanded, inward >= 24, inward > vertical {
-                swipeOrigin = nil
-                expand()
-            } else if state.isExpanded, !state.isInteracting, -inward >= 50, -inward > vertical * 2 {
-                swipeOrigin = nil
-                forceCollapse()
-            }
-        case .leftMouseUp:
-            swipeOrigin = nil
-        default:
-            break
+        let result = swipe.handle(
+            type, at: point, screen: screen.frame, bar: barRect,
+            isExpanded: state.isExpanded, isInteracting: state.isInteracting
+        )
+        switch result {
+        case .reveal: expand()
+        case .hide: forceCollapse()
+        case .none: break
         }
     }
 

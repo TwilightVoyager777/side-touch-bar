@@ -134,14 +134,25 @@ struct GeneralSettingsView: View {
                     .foregroundStyle(.secondary)
             }
 
-            Section(tr("行为")) {
-                Toggle(tr("自动隐藏"), isOn: $settings.autoHide)
+            Section {
+                Picker(tr("显示方式"), selection: $settings.autoHide) {
+                    Text(tr("自动隐藏")).tag(true)
+                    Text(tr("一直显示")).tag(false)
+                }
+                .pickerStyle(.segmented)
                 Picker(tr("闲置后收起"), selection: $settings.idleDelay) {
                     ForEach(Settings.idleDelayOptions, id: \.self) { seconds in
                         Text(seconds == 0 ? tr("从不") : tr("%d 秒", Int(seconds))).tag(seconds)
                     }
                 }
                 .disabled(!settings.autoHide)
+            } header: {
+                Text(tr("行为"))
+            } footer: {
+                Text(settings.autoHide
+                    ? tr("指针或手指离开后收起，只在边缘留一条把手。")
+                    : tr("侧边栏不会自己收起。在栏上往外滑可以临时收起，从边缘滑入或点把手再显示。"))
+                    .foregroundStyle(.secondary)
             }
 
             Section {

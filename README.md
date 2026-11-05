@@ -133,6 +133,7 @@ When the frontmost app plays video or music, the app controls become one consist
 ### Customization
 
 - **Custom buttons** for any app, picked from its menus, recorded as a shortcut, or typed text.
+- **Behavior** — hide automatically, or always show (swipe out across the bar to tuck it away for now).
 - **Appearance** — regular or clear glass, light/dark/system.
 - **Display** — main, built-in or the display under the pointer; small, standard or large size.
 

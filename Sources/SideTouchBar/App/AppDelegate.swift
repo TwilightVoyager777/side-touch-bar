@@ -194,9 +194,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
 
         menu.addItem(.separator())
-        let autoHide = menuItem(tr("自动隐藏"), action: #selector(toggleAutoHide))
-        autoHide.state = settings.autoHide ? .on : .off
-        menu.addItem(autoHide)
+        let alwaysShow = menuItem(tr("一直显示"), action: #selector(toggleAlwaysShow))
+        alwaysShow.state = settings.autoHide ? .off : .on
+        menu.addItem(alwaysShow)
 
         Permissions.shared.refresh()
         if !Permissions.shared.isTrusted {
@@ -223,7 +223,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         settings.barPage = page
     }
 
-    @objc private func toggleAutoHide() {
+    @objc private func toggleAlwaysShow() {
         settings.autoHide.toggle()
     }
 
