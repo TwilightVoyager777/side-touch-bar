@@ -180,23 +180,7 @@ struct AgentAttentionPanel: View {
 
     var body: some View {
         VStack(spacing: metrics.spacing) {
-            Text(tr("等你确认"))
-                .font(.system(size: metrics.captionSize * 0.9, weight: .semibold))
-                .foregroundStyle(.orange)
-            Text(session.title)
-                .font(.system(size: metrics.captionSize, weight: .semibold))
-                .lineLimit(2)
-                .multilineTextAlignment(.center)
-                .frame(width: metrics.width - 4)
-            if let detail = session.detail {
-                Text(detail)
-                    .font(.system(size: metrics.captionSize * 0.85, design: .monospaced))
-                    .foregroundStyle(.secondary)
-                    .lineLimit(3)
-                    .multilineTextAlignment(.center)
-                    .frame(width: metrics.width - 4)
-                    .help(detail)
-            }
+            header
             BarDivider()
             BarButton(icon: .symbol("checkmark"), help: "是", tint: .green) {
                 AgentSessionActions.answer(.yes, for: session)
@@ -217,6 +201,39 @@ struct AgentAttentionPanel: View {
                 withAnimation(BarAnimation.morph) { state.dismissedAttentionKey = AttentionKey(session) }
             }
         }
+    }
+
+    /// What's waiting, as one centered card the width of the buttons below it.
+    private var header: some View {
+        let textWidth = metrics.buttonSize + 2 * metrics.scale
+        return VStack(spacing: 3 * metrics.scale) {
+            Text(tr("请确认"))
+                .font(.system(size: metrics.captionSize * 0.9, weight: .bold))
+                .foregroundStyle(.orange)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+            Text(session.title)
+                .font(.system(size: metrics.captionSize * 0.9, weight: .semibold))
+                .lineLimit(2)
+                .minimumScaleFactor(0.75)
+                .help(session.cwd ?? session.title)
+            if let detail = session.detail {
+                Text(detail)
+                    .font(.system(size: metrics.captionSize * 0.8, design: .monospaced))
+                    .foregroundStyle(.secondary)
+                    .lineLimit(2)
+                    .truncationMode(.middle)
+                    .help(detail)
+            }
+        }
+        .multilineTextAlignment(.center)
+        .frame(width: textWidth)
+        .padding(.vertical, 6 * metrics.scale)
+        .padding(.horizontal, 2 * metrics.scale)
+        .background(
+            RoundedRectangle(cornerRadius: metrics.buttonSize * 0.3, style: .continuous)
+                .fill(Color.orange.opacity(0.14))
+        )
     }
 }
 

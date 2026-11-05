@@ -306,6 +306,7 @@ extension L10n {
         "无法打开麦克风": "Couldn't open the microphone",
         "安装状态提醒后，这里会显示会话状态和上下文用量": "Install status alerts to see session status and context usage here",
         "等你确认": "Needs approval",
+        "请确认": "Approve?",
         "跳到这个会话": "Go to this session",
         "稍后处理": "Later",
         "没有 AI 会话": "No AI sessions",
