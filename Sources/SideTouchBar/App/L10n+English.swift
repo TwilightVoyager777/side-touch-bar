@@ -306,7 +306,7 @@ extension L10n {
         "无法打开麦克风": "Couldn't open the microphone",
         "安装状态提醒后，这里会显示会话状态和上下文用量": "Install status alerts to see session status and context usage here",
         "等你确认": "Needs approval",
-        "请确认": "Approve?",
+        "待确认": "Approve?",
         "访达": "Finder",
         "VS Code · 调试": "VS Code · Debugging",
         "正在播放": "Now Playing",

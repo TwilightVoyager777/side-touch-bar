@@ -207,7 +207,7 @@ struct AgentAttentionPanel: View {
     private var header: some View {
         let textWidth = metrics.buttonSize + 2 * metrics.scale
         return VStack(spacing: 3 * metrics.scale) {
-            Text(tr("请确认"))
+            Text(tr("待确认"))
                 .font(.system(size: metrics.captionSize * 0.9, weight: .bold))
                 .foregroundStyle(.orange)
                 .lineLimit(1)
