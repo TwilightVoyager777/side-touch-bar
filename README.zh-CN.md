@@ -16,7 +16,7 @@
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/preview-dark.zh.jpg">
-  <img src="docs/images/preview-light.zh.jpg" alt="Side Touch Bar 显示访达按钮、VS Code 调试、播放控件和 Claude Code 确认卡片" width="560">
+  <img src="docs/images/preview-light.zh.jpg" alt="Side Touch Bar 显示访达按钮、播放控件、Claude Code 确认卡片、终端里的 Codex 和 VS Code 调试" width="680">
 </picture>
 
 <sub>图片由应用自身的 SwiftUI 界面渲染，液态玻璃材质在图中为近似效果。</sub>

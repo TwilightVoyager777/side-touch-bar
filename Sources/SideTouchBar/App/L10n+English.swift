@@ -309,6 +309,7 @@ extension L10n {
         "待确认": "Approve?",
         "访达": "Finder",
         "VS Code · 调试": "VS Code · Debugging",
+        "Codex · 终端": "Codex · Terminal",
         "正在播放": "Now Playing",
         "Claude Code · 确认": "Claude Code · Approve",
         "设计评审：液态玻璃": "Design Review — Liquid Glass",

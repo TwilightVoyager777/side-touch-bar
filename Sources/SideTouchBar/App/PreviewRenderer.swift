@@ -58,9 +58,19 @@ enum PreviewRenderer {
                 cwd: "/Users/me/side-touch-bar", detail: "npm run test"
             )
         }
+        let codex = make {
+            // ImageRenderer leaves scroll views blank, so leave out the quick inputs list.
+            let preset = AIPresets.terminalAgent(.codex)
+            var pages = preset.pages
+            pages[0].extras.removeAll { if case .quickInputs = $0 { true } else { false } }
+            $0.presetOverride = AppPreset(id: preset.id, bundleIDs: preset.bundleIDs, pages: pages)
+            $0.agentSessionSample = AgentSession(
+                id: "preview-codex", agent: .codex, status: .running, cwd: "/Users/me/my-app"
+            )
+        }
         return [
-            (tr("访达"), finder), (tr("VS Code · 调试"), debug),
-            (tr("正在播放"), playback), (tr("Claude Code · 确认"), approval),
+            (tr("访达"), finder), (tr("正在播放"), playback), (tr("Claude Code · 确认"), approval),
+            (tr("Codex · 终端"), codex), (tr("VS Code · 调试"), debug),
         ]
     }
 }
