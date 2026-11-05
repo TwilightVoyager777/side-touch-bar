@@ -172,7 +172,7 @@ Side Touch Bar **不发送任何网络请求**，唯一的例外是你从常用�
 
 > [!NOTE]
 > 部分功能依赖系统私有接口或非官方方式，以后的 macOS 版本可能会改变。因此本应用不能通过 Mac App Store 分发。
-> - **正在播放**：macOS 15.4 起，MediaRemote 只向苹果签名的程序提供信息，所以应用在系统自带的 `/usr/bin/perl` 里运行一个小程序（`Helpers/NowPlayingHelper.m`）来读取播放信息。这个思路来自 [mediaremote-adapter](https://github.com/ungive/mediaremote-adapter)。
+> - **正在播放**：macOS 15.4 起，MediaRemote 只向苹果签名的程序提供信息，所以应用在系统自带的 `/usr/bin/perl` 里运行一个小程序（`Helpers/NowPlayingHelper.m`）来读取播放信息。
 > - **亮度、键盘背光、夜览、深色模式、空间**：使用私有框架（DisplayServices、CoreBrightness、SkyLight），不可用时退回到模拟按键。
 
 ## 工作原理
@@ -265,7 +265,6 @@ flowchart LR
 ## 致谢
 
 - 灵感来自苹果的 Touch Bar 和它的控制条。
-- "正在播放"的实现思路来自 [ungive/mediaremote-adapter](https://github.com/ungive/mediaremote-adapter)。
 - 图标来自 [SF Symbols](https://developer.apple.com/sf-symbols/)。
 
 ## 许可证

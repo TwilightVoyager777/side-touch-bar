@@ -172,7 +172,7 @@ Side Touch Bar makes **no network requests**; links you open from favorite sites
 
 > [!NOTE]
 > Some features rely on private or unofficial system interfaces and may change with future macOS releases. Because of this, the app cannot be distributed through the Mac App Store.
-> - **Now Playing**: since macOS 15.4, MediaRemote only answers Apple-signed processes, so a small helper (`Helpers/NowPlayingHelper.m`) runs inside the system's `/usr/bin/perl` to read playback information — the approach pioneered by [mediaremote-adapter](https://github.com/ungive/mediaremote-adapter).
+> - **Now Playing**: since macOS 15.4, MediaRemote only answers Apple-signed processes, so a small helper (`Helpers/NowPlayingHelper.m`) runs inside the system's `/usr/bin/perl` to read playback information.
 > - **Brightness, keyboard backlight, Night Shift, dark mode, Spaces** use private frameworks (DisplayServices, CoreBrightness, SkyLight), falling back to simulated keys.
 
 ## How it works
@@ -265,7 +265,6 @@ Bug reports, presets for more apps and translations are welcome. See [CONTRIBUTI
 ## Acknowledgements
 
 - Inspired by Apple's Touch Bar and its Control Strip.
-- The Now Playing approach builds on [ungive/mediaremote-adapter](https://github.com/ungive/mediaremote-adapter).
 - Icons are [SF Symbols](https://developer.apple.com/sf-symbols/).
 
 ## License
