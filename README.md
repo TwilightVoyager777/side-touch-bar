@@ -4,7 +4,7 @@
 
 **The MacBook Touch Bar, reimagined as a vertical Liquid Glass bar on the edge of your screen.**
 
-Built for the touch-screen Macs to come — and fully usable with a mouse or trackpad today.
+Built for the new MacBook Pro with Touch — and fully usable with a mouse or trackpad.
 
 [![CI](https://github.com/TwilightVoyager777/side-touch-bar/actions/workflows/ci.yml/badge.svg)](https://github.com/TwilightVoyager777/side-touch-bar/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/TwilightVoyager777/side-touch-bar?include_prereleases&sort=semver)](https://github.com/TwilightVoyager777/side-touch-bar/releases)
@@ -27,9 +27,17 @@ Built for the touch-screen Macs to come — and fully usable with a mouse or tra
 
 ## Why
 
-On a touch-screen laptop, the bottom of the display is the worst place for controls: your hands are on the keyboard, the hinge gets in the way, and the lid wobbles when you press it. The side edges are different — you can hold the lid with your fingers behind it and tap with your thumb, and a 16:10 display has width to spare where a bottom bar would cost precious height.
+The new MacBook Pro finally has Touch. The Touch Bar didn't come back with it.
 
-Side Touch Bar puts the Touch Bar there, turned on its side: **esc → app controls → Control Strip**, top to bottom.
+Before you had time to miss it, it found a new place.
+
+**Touch doesn't stop at the middle of the screen.**
+
+Side Touch Bar stands the Touch Bar up along the right edge of the display: **esc, app controls and the Control Strip**, top to bottom. Rest your fingers behind the lid, and it's right under your thumb. It stays clear of the keyboard, keeps the display steady, and takes no vertical space at all.
+
+Slide to set brightness. Tap to approve Claude Code. Music, video and code each get buttons of their own.
+
+**Touch, taken to the edge.**
 
 ## Highlights
 

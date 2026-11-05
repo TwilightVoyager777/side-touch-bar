@@ -4,7 +4,7 @@
 
 **把 MacBook Touch Bar 竖过来，变成屏幕边缘的一条液态玻璃侧边栏。**
 
-为将来的触屏 Mac 设计，现在用鼠标或触控板也能完整使用。
+为可触控的 MacBook Pro 设计，用鼠标或触控板也能完整使用。
 
 [![CI](https://github.com/TwilightVoyager777/side-touch-bar/actions/workflows/ci.yml/badge.svg)](https://github.com/TwilightVoyager777/side-touch-bar/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/TwilightVoyager777/side-touch-bar?include_prereleases&sort=semver)](https://github.com/TwilightVoyager777/side-touch-bar/releases)
@@ -27,9 +27,17 @@
 
 ## 为什么做这个
 
-在触屏笔记本上，屏幕底部是最不适合放按钮的位置：双手在键盘上，转轴挡着，一按屏幕就晃。屏幕两侧不一样：可以用手指从背面扶住屏幕，用拇指点按；而且 16:10 的屏幕横向有富余，不像底部那样占用宝贵的高度。
+新款 MacBook Pro 终于可以触控了，Touch Bar 却没有一起回来。
 
-Side Touch Bar 把 Touch Bar 竖着放到了这里：从上到下是 **esc → 应用控件 → 控制条**。
+还没来得及失望，它已经换个位置回来了。
+
+**触控，不止于屏幕中央。**
+
+Side Touch Bar 让 Touch Bar 竖立在屏幕右侧边缘，从上到下依次是 **esc、应用控件和控制条**。手指在背后扶住屏幕，拇指轻轻一点，就能够到。不挡键盘，屏幕不晃，也不占用一点纵向空间。
+
+亮度，一滑即调。Claude Code 的请求，一点即准。音乐、视频、代码，各有专属的按钮。
+
+**触屏，玩出新高度。**
 
 ## 亮点
 
