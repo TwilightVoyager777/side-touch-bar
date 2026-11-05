@@ -2,27 +2,33 @@ import AppKit
 import SwiftUI
 
 /// `SideTouchBar --render-previews <directory>`: renders README images from
-/// the real bar views. Liquid Glass can't be captured offscreen, so the glass
-/// is approximated with a translucent fill.
+/// the real bar views, in English (preview-light.jpg) and Chinese
+/// (preview-light.zh.jpg), light and dark. Liquid Glass can't be captured
+/// offscreen, so the glass is approximated with a translucent fill.
 @MainActor
 enum PreviewRenderer {
     static func run(to directory: String) {
         NSApplication.shared.setActivationPolicy(.accessory)
         let defaults = UserDefaults.standard
         let previousLanguage = defaults.string(forKey: L10n.languageKey)
-        defaults.set(AppLanguage.english.rawValue, forKey: L10n.languageKey)
         defer { defaults.set(previousLanguage, forKey: L10n.languageKey) }
 
-        for scheme in [ColorScheme.light, .dark] {
-            let name = scheme == .light ? "preview-light.jpg" : "preview-dark.jpg"
-            let image = ImageRenderer(content: PreviewSheet().environment(\.colorScheme, scheme))
-            image.scale = 1.2
-            guard let tiff = image.nsImage?.tiffRepresentation,
-                  let jpeg = NSBitmapImageRep(data: tiff)?.representation(using: .jpeg, properties: [.compressionFactor: 0.88]) else { continue }
-            let url = URL(fileURLWithPath: directory).appendingPathComponent(name)
-            try? jpeg.write(to: url)
-            print("Wrote \(url.path)")
+        for (language, suffix) in [(AppLanguage.english, ""), (.chinese, ".zh")] {
+            defaults.set(language.rawValue, forKey: L10n.languageKey)
+            for scheme in [ColorScheme.light, .dark] {
+                render(scheme: scheme, to: directory, name: "preview-\(scheme == .light ? "light" : "dark")\(suffix).jpg")
+            }
         }
+    }
+
+    private static func render(scheme: ColorScheme, to directory: String, name: String) {
+        let image = ImageRenderer(content: PreviewSheet().environment(\.colorScheme, scheme))
+        image.scale = 1.2
+        guard let tiff = image.nsImage?.tiffRepresentation,
+              let jpeg = NSBitmapImageRep(data: tiff)?.representation(using: .jpeg, properties: [.compressionFactor: 0.88]) else { return }
+        let url = URL(fileURLWithPath: directory).appendingPathComponent(name)
+        try? jpeg.write(to: url)
+        print("Wrote \(url.path)")
     }
 
     static func states() -> [(String, BarState)] {
@@ -40,7 +46,7 @@ enum PreviewRenderer {
         }
         let playback = make {
             $0.nowPlayingSample = NowPlayingInfo(
-                title: "Design Review — Liquid Glass", artist: nil, duration: 1_860, elapsed: 742, rate: 1,
+                title: tr("设计评审：液态玻璃"), artist: nil, duration: 1_860, elapsed: 742, rate: 1,
                 timestamp: Date(), isPlaying: true, pid: nil, bundleID: nil, parentBundleID: nil,
                 shuffleMode: nil, repeatMode: nil
             )
@@ -52,7 +58,10 @@ enum PreviewRenderer {
                 cwd: "/Users/me/side-touch-bar", detail: "npm run test"
             )
         }
-        return [("Finder", finder), ("VS Code · Debugging", debug), ("Now Playing", playback), ("Claude Code · Approve", approval)]
+        return [
+            (tr("访达"), finder), (tr("VS Code · 调试"), debug),
+            (tr("正在播放"), playback), (tr("Claude Code · 确认"), approval),
+        ]
     }
 }
 

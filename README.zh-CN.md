@@ -15,8 +15,8 @@
 [安装](#安装) · [功能](#功能) · [工作原理](#工作原理) · [常见问题](#常见问题) · [English](README.md)
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/images/preview-dark.jpg">
-  <img src="docs/images/preview-light.jpg" alt="Side Touch Bar 显示 Finder 按钮、VS Code 调试、播放控件和 Claude Code 确认提示" width="640">
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/preview-dark.zh.jpg">
+  <img src="docs/images/preview-light.zh.jpg" alt="Side Touch Bar 显示访达按钮、VS Code 调试、播放控件和 Claude Code 确认卡片" width="560">
 </picture>
 
 <sub>图片由应用自身的 SwiftUI 界面渲染，液态玻璃材质在图中为近似效果。</sub>
@@ -121,7 +121,7 @@ make uninstall          # 或 scripts/uninstall.sh
 - **终端里的 AI**：运行 Claude Code、Codex、OpenCode 或 Gemini 时，侧边栏显示 **是 / 总是允许 / 否**、切换权限模式、语音输入、截图，以及一键输入的提示词和斜杠命令。
 - **按住说话**：把说的话转成文字输入到当前应用，优先使用本机离线识别。
 - **发送上下文**：把选中的代码（带文件路径）、当前网页或一块屏幕截图发给最近使用的 AI 工具。
-- **状态提醒**：AI 等你确认时，边缘把手变成橙色；完成时变绿；运行中是蓝色。需要确认时侧边栏会自动滑出，不用切换窗口就能回答；会话列表可以直接跳到对应的终端。Claude Code 还会用一个小圆环显示上下文用量。详见 [AI 状态提醒](#ai-状态提醒)。
+- **状态提醒**：AI 等你确认时，边缘把手变成橙色；完成时变绿；运行中是蓝色。需要确认时侧边栏会自动滑出，顶部的卡片显示是哪个项目、要执行什么命令，下面是 **是 / 总是允许 / 否**，不用切换窗口就能回答；会话列表可以直接跳到对应的终端。Claude Code 还会用一个小圆环显示上下文用量。详见 [AI 状态提醒](#ai-状态提醒)。
 
 ### 触屏
 

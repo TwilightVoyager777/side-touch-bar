@@ -20,7 +20,7 @@ Useful developer commands:
 | Command | Purpose |
 |---|---|
 | `.build/debug/SideTouchBar --sizing-report --verbose` | Height of every bar state on common displays |
-| `.build/debug/SideTouchBar --render-previews docs/images` | Regenerate the README preview images |
+| `.build/debug/SideTouchBar --render-previews docs/images` | Regenerate the README preview images (English and Chinese, light and dark) |
 | `python3 scripts/check-l10n.py` | Find missing, duplicate or unused translations |
 
 ## Project layout

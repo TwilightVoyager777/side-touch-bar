@@ -16,7 +16,7 @@ Built for the touch-screen Macs to come — and fully usable with a mouse or tra
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/preview-dark.jpg">
-  <img src="docs/images/preview-light.jpg" alt="Side Touch Bar showing Finder buttons, the VS Code debugger, playback controls and a Claude Code approval prompt" width="640">
+  <img src="docs/images/preview-light.jpg" alt="Side Touch Bar showing Finder buttons, the VS Code debugger, playback controls and a Claude Code approval card" width="640">
 </picture>
 
 <sub>Rendered from the app's own SwiftUI views; the Liquid Glass material is approximated in these images.</sub>
@@ -121,7 +121,7 @@ When the frontmost app plays video or music, the app controls become one consist
 - **Agents in the terminal** — with Claude Code, Codex, OpenCode or Gemini running, the bar shows **Yes / Always allow / No**, permission-mode cycling, voice input, screenshots and one-tap prompts or slash commands.
 - **Hold-to-talk voice input** — speech becomes text in the focused app, using on-device recognition when available.
 - **Send context** — selected code (with its file path), the current web page or a screen region goes to the AI tool you used last.
-- **Status alerts** — the edge handle turns orange when an agent needs approval, green when it finishes and blue while it works. Approval prompts slide the bar out so you can answer without switching windows; a session list jumps straight to each terminal. Claude Code context usage appears as a small gauge. See [AI status alerts](#ai-status-alerts).
+- **Status alerts** — the edge handle turns orange when an agent needs approval, green when it finishes and blue while it works. Approval prompts slide the bar out with a card showing the project and the command waiting for approval, above **Yes / Always allow / No**, so you can answer without switching windows; a session list jumps straight to each terminal. Claude Code context usage appears as a small gauge. See [AI status alerts](#ai-status-alerts).
 
 ### Touch
 
